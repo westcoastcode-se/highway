@@ -56,7 +56,8 @@ bool hiw_string_readline(const hiw_string* str, hiw_string* dest)
 
 	const char* c = dest->begin = str->begin;
 	const char* const end = str->begin + str->length;
-	for (; c != end && *c != '\n'; ++c);
+	for (; c != end && *c != '\n'; ++c)
+		;
 
 	if (c != end)
 	{
@@ -72,26 +73,27 @@ hiw_string hiw_string_rtrim(hiw_string str)
 {
 	// string is empty, so no trim is necessary
 	if (str.length == 0)
-		return (hiw_string){ .length = 0 };
+		return (hiw_string){.length = 0};
 
 	const char* start = str.begin;
 	const char* end = str.begin + str.length;
 
 	// right trim
-	while (end != start && hiw_string_isspace(*--end));
+	while (end != start && hiw_string_isspace(*--end))
+		;
 
 	// the last character is a whitespace
 	if (hiw_string_isspace(*end))
-		return (hiw_string){ .length = 0 };
+		return (hiw_string){.length = 0};
 
 	// return a string based on it
-	return (hiw_string){ .begin = start, .length = (int)(end - start) + 1 };
+	return (hiw_string){.begin = start, .length = (int)(end - start) + 1};
 }
 
 hiw_string hiw_string_trim(const hiw_string str)
 {
 	if (str.length == 0)
-		return (hiw_string){ .length = 0 };
+		return (hiw_string){.length = 0};
 
 	const char* start = str.begin;
 	const char* end = str.begin + str.length;
@@ -100,14 +102,15 @@ hiw_string hiw_string_trim(const hiw_string str)
 	while (start != end && hiw_string_isspace(*start)) start++;
 
 	// right trim
-	while (end != start && hiw_string_isspace(*--end));
+	while (end != start && hiw_string_isspace(*--end))
+		;
 
 	// the last character is a whitespace
 	if (hiw_string_isspace(*end))
-		return (hiw_string){ .length = 0 };
+		return (hiw_string){.length = 0};
 
 	// return a string based on it
-	return (hiw_string){ .begin = start, .length = (int)(end - start) + 1 };
+	return (hiw_string){.begin = start, .length = (int)(end - start) + 1};
 }
 
 const char* hiw_std_ctoui(const char* const str, const int n, unsigned int* i)
@@ -151,18 +154,51 @@ const char* hiw_std_ctoi(const char* const str, const int n, unsigned int* i)
 	return s;
 }
 
+extern char* hiw_std_uitoc(char* const dest, const int n, unsigned int val)
+{
+	static const char base[] = {"0123456789"};
+	if (n == 0 || dest == NULL)
+		return NULL;
+
+	if (val == 0)
+	{
+		*dest = base[0];
+		return dest + 1;
+	}
+
+	// itoa in reversed order
+	char* ptr = dest;
+	const char* const end = ptr + n;
+	for(; ptr != end && val; ++ptr)
+	{
+		*ptr = base[val % 10];
+		val /= 10;
+	}
+
+	// mirror the result
+	const int written = (int)(ptr - dest);
+	const int mid = written / 2;
+	for(int i = 0; i < mid; ++i)
+	{
+		const char tmp = dest[i];
+		dest[i] = dest[written - i - 1];
+		dest[written - i - 1] = tmp;
+	}
+	return ptr;
+}
+
 hiw_string hiw_string_toui(hiw_string str, unsigned int* i)
 {
 	const char* ptr = hiw_std_ctoui(str.begin, str.length, i);
 	const int length = (int)((str.begin + str.length) - ptr);
-	return (hiw_string){ .begin = ptr, .length = length };
+	return (hiw_string){.begin = ptr, .length = length};
 }
 
 hiw_string hiw_string_toi(hiw_string str, int* i)
 {
 	const char* ptr = hiw_std_ctoi(str.begin, str.length, i);
 	const int length = (int)((str.begin + str.length) - ptr);
-	return (hiw_string){ .begin = ptr, .length = length };
+	return (hiw_string){.begin = ptr, .length = length};
 }
 
 int hiw_string_split(hiw_string* str, char delim, hiw_string* dest, int n)
@@ -179,14 +215,15 @@ int hiw_string_split(hiw_string* str, char delim, hiw_string* dest, int n)
 	for (; num < (n - 1); ++num)
 	{
 		// seek until we find the delimiter
-		for (; split_end != end && *split_end != delim; ++split_end);
+		for (; split_end != end && *split_end != delim; ++split_end)
+			;
 
 		// did we reach the end?
 		if (split_end == end)
 			break;
 
 		hiw_string_set(&dest[num], start, (int)(split_end - start));
-		split_end++; // skip the delim
+		split_end++;// skip the delim
 		start = split_end;
 	}
 
@@ -283,4 +320,18 @@ char* hiw_memory_get(hiw_memory* m, int n)
 	char* ret = m->pos;
 	m->pos += n;
 	return ret;
+}
+
+char* hiw_std_mempy(const char* src, const int n, char* dest, int capacity)
+{
+	// nothing to copy
+	if (src == NULL || n == 0) return dest;
+	if (dest == NULL || capacity == 0) return NULL;
+
+	// clamp to the maximum number of bytes
+	capacity = n > capacity ? capacity : n;
+	for (const char* const end = src + capacity; src != end; src++, dest++)
+		*dest = *src;
+
+	return dest;
 }

@@ -32,6 +32,13 @@ void on_request(hiw_thread* t)
 	hiw_thread_context_pop(t);
 }
 
+void handleRequest(hiw_request* req, hiw_response* resp)
+{
+	hiw_response_set_status_code(resp, 200);
+	hiw_response_set_content_length(resp, 12);
+	hiw_response_write_body_raw(resp, "Hello World!", 12);
+}
+
 void test(hiw_request* req, hiw_response* resp, const hiw_filter_chain* chain)
 {
 	void* data = hiw_filter_get_data(chain);
@@ -98,6 +105,7 @@ int main()
 		hiw_servlet servlet = {};
 		hiw_servlet_init(&servlet, server);
 		hiw_servlet_set_filter_chain(&servlet, filters);
+		hiw_servlet_set_func(&servlet, handleRequest);
 
 		// Start the servlet
 		hiw_servlet_start(&servlet);

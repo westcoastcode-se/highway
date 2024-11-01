@@ -130,7 +130,7 @@ hiw_client* hiw_server_accept(hiw_server* s)
 		return NULL;
 	}
 
-	hiw_internal_client* const client = (hiw_internal_client*)malloc(sizeof(hiw_internal_client));
+	hiw_internal_client* const client = malloc(sizeof(hiw_internal_client));
 	if (client == NULL)
 	{
 		log_error("out of memory");
@@ -197,7 +197,7 @@ void hiw_client_delete(hiw_client* c)
 	free(impl);
 }
 
-int hiw_client_recv(hiw_client* c, char* dest, int len)
+int hiw_client_recv(hiw_client* c, char* const dest, const int len)
 {
 	assert(c != NULL && "expected 'c' to exist");
 	if (c == NULL)
@@ -213,4 +213,22 @@ int hiw_client_send(hiw_client* c, const char* const src, const int len)
 		return -1;
 	hiw_internal_client* const impl = (hiw_internal_client*)c;
 	return hiw_socket_send(impl->socket, src, len);
+}
+
+int hiw_client_sendall(hiw_client* c, const char* src, int len)
+{
+	assert(c != NULL && "expected 'c' to exist");
+	if (c == NULL)
+		return -1;
+	hiw_internal_client* const impl = (hiw_internal_client*)c;
+
+	int bytes_left = len;
+	while (bytes_left > 0)
+	{
+		const int ret = hiw_socket_send(impl->socket, src, bytes_left);
+		if (ret <= 0)
+			return -1;
+		bytes_left -= ret;
+	}
+	return len;
 }

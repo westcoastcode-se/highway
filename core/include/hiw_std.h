@@ -144,7 +144,7 @@ HIW_PUBLIC extern hiw_string hiw_string_trim(hiw_string str);
 * @param i the result
 * @return
 */
-HIW_PUBLIC extern const char* hiw_std_ctoui(const char* const str, const int n, unsigned int* i);
+HIW_PUBLIC extern const char* hiw_std_ctoui(const char* const str, int n, unsigned int* i);
 
 /**
 * convert the supplied string and put the result into the supplied integer
@@ -155,7 +155,17 @@ HIW_PUBLIC extern const char* hiw_std_ctoui(const char* const str, const int n, 
 * @param i the result
 * @return
 */
-HIW_PUBLIC extern const char* hiw_std_ctoi(const char* const str, const int n, unsigned int* i);
+HIW_PUBLIC extern const char* hiw_std_ctoi(const char* const str, int n, unsigned int* i);
+
+/**
+* convert the supplied unsigned integer and put the result into the destination buffer
+*
+* @param dest the destination buffer
+* @param n the number of characters in the destination buffer
+* @param i the value
+* @return a pointer to where the library stopped writing into the memory buffer
+*/
+HIW_PUBLIC extern char* hiw_std_uitoc(char* const dest, int n, unsigned int i);
 
 /**
  * @brief convert the supplied string and put the result into the supplied unsigned integer
@@ -263,5 +273,14 @@ HIW_PUBLIC extern void hiw_memory_reset(hiw_memory* m);
  * @return A pointer to the memory location we are allowed to write to. NULL we are out of memory
  */
 HIW_PUBLIC extern char* hiw_memory_get(hiw_memory* m, int n);
+
+/**
+ * Copy raw bytes from a view or memory
+ * @param m the memory
+ * @param dest the destination buffer
+ * @param capacity destination buffer capacity
+ * @return where the copy stopped in the destination buffer
+ */
+HIW_PUBLIC extern char* hiw_std_mempy(const char* src, int n, char* dest, int capacity);
 
 #endif //hiw_STD_H

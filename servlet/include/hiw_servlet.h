@@ -125,6 +125,9 @@ struct HIW_PUBLIC hiw_servlet
 	// The filter chain used by all servlet threads
 	hiw_filter_chain filter_chain;
 
+	// The servlet function to be called when all filters have passed
+	hiw_servlet_fn servlet_func;
+
 	// Config
 	hiw_servlet_config config;
 
@@ -213,6 +216,14 @@ HIW_PUBLIC extern void hiw_servlet_delete(hiw_servlet* s);
 HIW_PUBLIC extern void hiw_servlet_set_filter_chain(hiw_servlet* s, const hiw_filter* filters);
 
 /**
+ * Set the servlet to be called for each request. This function is called at the end of each filter chain
+ *
+ * @param s the servlet
+ * @param func the function
+ */
+HIW_PUBLIC extern void hiw_servlet_set_func(hiw_servlet* s, hiw_servlet_fn func);
+
+/**
  * Set the starter function for a servlet. A default starter is used if this is not set
  *
  * @param s the servlet
@@ -253,8 +264,67 @@ HIW_PUBLIC extern void hiw_filter_chain_next(hiw_request* req, hiw_response* res
 /**
  * Start the servlet filter chain
  *
- * @param st
+ * @param st the highway servlet thread
  */
 HIW_PUBLIC extern void hiw_servlet_start_filter_chain(hiw_servlet_thread* st);
+
+/**
+ * @brief Receive data from the supplier request
+ * @param dest The destination buffer
+ * @param n The number of bytes to read
+ * @return The number of bytes read from the client
+ */
+HIW_PUBLIC extern int hiw_request_recv(hiw_request* req, char* dest, int n);
+
+/**
+ * @brief write a header to the supplier response
+ * @param resp The response
+ * @param header
+ * @return true if writing the header was successful
+ */
+HIW_PUBLIC extern bool hiw_response_write_header(hiw_response* resp, hiw_header header);
+
+/**
+ * @brief write raw binary data to the client
+ * @param resp The response
+ * @param src The source buffer
+ * @param n The number of bytes to send
+ * @return true if writing the response body data was successful
+ *
+ * Please note that this will forcefully send all headers. If those are invalid, then the connection will forcefully close
+ */
+HIW_PUBLIC extern bool hiw_response_write_body_raw(hiw_response* resp, const char* src, int n);
+
+/**
+ * @brief write the content-type header to the supplier response
+ * @param resp The response
+ * @param mime_type The mime type
+ * @return true if writing the header was successful
+ */
+HIW_PUBLIC extern bool hiw_response_set_content_type(hiw_response* resp, hiw_string mime_type);
+
+/**
+ * @brief write a content-length header to the supplier response
+ * @param resp The response
+ * @param len The length
+ * @return true if writing the header was successful
+ */
+HIW_PUBLIC extern bool hiw_response_set_content_length(hiw_response* resp, int len);
+
+/**
+ * @brief write the connection header to the supplier response with the value close (if value set to true)
+ * @param resp The response
+ * @param close If the connection should close or not
+ * @return true if writing the header was successful
+ */
+HIW_PUBLIC extern bool hiw_response_set_connection_close(hiw_response* resp, bool close);
+
+/**
+ * @brief Set the status code
+ * @param resp The response
+ * @param status the status code
+ * @return true if writing the header was successful
+ */
+HIW_PUBLIC extern bool hiw_response_set_status_code(hiw_response* resp, int status);
 
 #endif //hiw_SERVLET_H

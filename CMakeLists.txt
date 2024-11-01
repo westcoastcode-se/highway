@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(wcc_http C)
+project(highway C)
 
 set(CMAKE_C_STANDARD 23)
 set(C_STANDARD_REQUIRED ON)

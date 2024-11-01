@@ -118,4 +118,9 @@ HIW_PUBLIC extern int hiw_client_recv(hiw_client* c, char* dest, int len);
  */
 HIW_PUBLIC extern int hiw_client_send(hiw_client* c, const char* src, int len);
 
+/**
+ * Send all data to this client
+ */
+HIW_PUBLIC extern int hiw_client_sendall(hiw_client* c, const char* src, int len);
+
 #endif //hiw_SERVER_H
