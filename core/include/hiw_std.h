@@ -136,6 +136,11 @@ HIW_PUBLIC extern hiw_string hiw_string_rtrim(hiw_string str);
 HIW_PUBLIC extern hiw_string hiw_string_trim(hiw_string str);
 
 /**
+ * @brief Try to get a suffix, seeking backwards
+ */
+HIW_PUBLIC extern hiw_string hiw_string_suffix(hiw_string str, char delim);
+
+/**
 * convert the supplied string and put the result into the supplied unsigned integer
 * returns a pointer to the first character when it no longer contains an integer
 *
@@ -224,7 +229,7 @@ struct HIW_PUBLIC hiw_memory
 typedef struct hiw_memory hiw_memory;
 
 /**
- * @brief Initialize the hiw_memory to use fixed memory for it's memory - normally memory from the stack.
+ * @brief Initialize a memory object connecting it a fixed memory block - normally memory on the stack.
  *        This type of memory will not be resized by hiw_memory because we don't know for sure if the
  *        memory is a fixed heap-based memory or if from the stack
  * @param m A memory instance
@@ -232,6 +237,14 @@ typedef struct hiw_memory hiw_memory;
  * @param capacity How many bytes are we allowed to write to the supplied memory buffer
  */
 HIW_PUBLIC extern void hiw_memory_fixed_init(hiw_memory* m, char* buf, int capacity);
+
+/**
+ * @brief Initialize memory on the heap with the supplied capacity. The memory will, automatically, resize itself when needed
+ * @param m
+ * @param capacity
+ * @return
+ */
+HIW_PUBLIC extern bool hiw_memory_dynamic_init(hiw_memory* m, int capacity);
 
 /**
  * @brief Release the hiw_memory instance's internal memory.

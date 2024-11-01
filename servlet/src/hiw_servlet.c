@@ -674,6 +674,8 @@ void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 		// Iterate over all filters and then, eventually, get to the actual servlet function!
 		if (st->filter_chain.filters != NULL)
 			st->filter_chain.filters->func(&request.pub, &response.pub, &st->filter_chain);
+		else if (st->servlet->servlet_func != NULL)
+			st->servlet->servlet_func(&request.pub, &response.pub);
 
 		// Verify that we've read all content from the client. If not, then the client sent a Content-Length header
 		// that's larger than what the servlet read
@@ -772,6 +774,13 @@ bool hiw_response_write_status_code(hiw_internal_response* resp)
 		hiw_std_mempy("200 OK\r\n", len, buf, len);
 		break;
 
+	case 404:
+		len = hiw_string_const_len("404 Not Found\r\n");
+		buf = hiw_memory_get(&resp->memory, len);
+		if (buf == NULL)
+			return hiw_internal_response_out_of_memory(resp);
+		hiw_std_mempy("404 Not Found\r\n", len, buf, len);
+		break;
 	case 418:
 	default:
 		len = hiw_string_const_len("418 I'm a teapot\r\n");

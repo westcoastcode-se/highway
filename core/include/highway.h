@@ -11,6 +11,7 @@
 #include "hiw_socket.h"
 #include "hiw_server.h"
 #include "hiw_logger.h"
+#include "hiw_mimetypes.h"
 
 /**
  * @brief Initialization properties for highway

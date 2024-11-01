@@ -113,6 +113,26 @@ hiw_string hiw_string_trim(const hiw_string str)
 	return (hiw_string){.begin = start, .length = (int)(end - start) + 1};
 }
 
+hiw_string hiw_string_suffix(hiw_string str, char delim)
+{
+	if (str.length <= 1)
+		return (hiw_string){.length = 0};
+
+	const char* start = str.begin;
+	const char* end = str.begin + str.length;
+
+	// seek backwards
+	while (end != start && *--end != delim);
+
+	// the last character might be a delimiter
+	if (start == end && *start == delim)
+		return str;
+
+	start = end;
+	end = str.begin + str.length;
+	return (hiw_string){.begin = start, .length = (int)(end - start)};
+}
+
 const char* hiw_std_ctoui(const char* const str, const int n, unsigned int* i)
 {
 	const char* s = str;
@@ -245,6 +265,24 @@ void hiw_memory_fixed_init(hiw_memory* m, char* buf, int capacity)
 	m->pos = m->ptr = buf;
 	m->end = m->pos + capacity;
 	m->resize_bytes = -1;
+}
+
+bool hiw_memory_dynamic_init(hiw_memory* m, int capacity)
+{
+	assert(m && "expected 'm' to be set");
+	if (m == NULL)
+		return false;
+
+	assert(capacity > 0 && "expected 'capacity' to be a valid value");
+	if (capacity <= 0)
+		return false;
+
+	m->pos = m->ptr = malloc(capacity);
+	if (m->ptr == NULL)
+		return false;
+	m->end = m->pos + capacity;
+	m->resize_bytes = capacity;
+	return true;
 }
 
 void hiw_memory_release(hiw_memory* mem)

@@ -11,9 +11,10 @@
 
 struct HIW_PUBLIC hiw_server_config
 {
-	// underlying server socket config
-	hiw_socket_config socket_config;
+    // underlying server socket config
+    hiw_socket_config socket_config;
 };
+
 typedef struct hiw_server_config hiw_server_config;
 
 // Default configuration for a highway server
@@ -24,22 +25,24 @@ typedef struct hiw_server_config hiw_server_config;
  */
 struct HIW_PUBLIC hiw_server
 {
-	// Configuration
-	hiw_server_config config;
+    // Configuration
+    hiw_server_config config;
 };
+
 typedef struct hiw_server hiw_server;
 
 enum HIW_PUBLIC hiw_server_error
 {
-	// Everything is fine!
-	hiw_SERVER_ERROR_NO_ERROR = 0,
+    // Everything is fine!
+    hiw_SERVER_ERROR_NO_ERROR = 0,
 
-	// Memory error, most likely because missing server memory
-	hiw_SERVER_ERROR_MEMORY,
+    // Memory error, most likely because missing server memory
+    hiw_SERVER_ERROR_MEMORY,
 
-	// underlying socket error
-	hiw_SERVER_ERROR_SOCKET,
+    // underlying socket error
+    hiw_SERVER_ERROR_SOCKET,
 };
+
 typedef enum hiw_server_error hiw_server_error;
 
 /**
@@ -47,9 +50,10 @@ typedef enum hiw_server_error hiw_server_error;
  */
 struct HIW_PUBLIC hiw_client
 {
-	// will be non-zero if an error has occurred
-	int error;
+    // will be non-zero if an error has occurred
+    int error;
 };
+
 typedef struct hiw_client hiw_client;
 
 /**

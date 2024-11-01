@@ -32,11 +32,12 @@ else ()
 endif ()
 
 add_library(highway
-        "core/src/hiw.c"
+        "core/src/highway.c"
         "core/src/hiw_std.c"
         "core/src/hiw_thread.c"
         "core/src/hiw_socket.c"
         "core/src/hiw_server.c"
+        "core/src/hiw_mimetypes.c"
 )
 target_include_directories(highway PUBLIC core/include)
 target_link_libraries(highway PRIVATE common)
@@ -57,8 +58,20 @@ endif ()
 #
 # Hello World Executable
 #
-add_executable(hello_world "examples/hello_world/main.c")
-target_include_directories(hello_world PUBLIC core/include)
-target_link_libraries(hello_world PRIVATE common)
-target_link_libraries(hello_world PRIVATE highway highway_servlet wsock32 ws2_32)
+add_executable(examples_hello_world "examples/hello_world/main.c")
+target_include_directories(examples_hello_world PUBLIC core/include)
+target_link_libraries(examples_hello_world PRIVATE common)
+target_link_libraries(examples_hello_world PRIVATE highway highway_servlet wsock32 ws2_32)
+
+#
+# Static Content Executable
+#
+add_executable(examples_static
+        "examples/static/main.c"
+        "examples/static/static_cache.c"
+)
+target_include_directories(examples_static PUBLIC core/include)
+target_link_libraries(examples_static PRIVATE common)
+target_link_libraries(examples_static PRIVATE highway highway_servlet wsock32 ws2_32)
+
 

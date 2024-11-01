@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for license terms
 //
 
-#include "hiw.h"
+#include "highway.h"
 #include "hiw_logger.h"
 
 hiw_init_config* hiw_internal_config()
