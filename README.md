@@ -13,7 +13,7 @@ that can be used to build REST applications.
 - [x] Logging: The client IP
 - [x] Support for filter chains
 - [x] Support for servlet function
-- [ ] 
+- [x] Library: Easier way to use the framework using Highway Boot
 
 **Not implemented**
 
@@ -49,6 +49,8 @@ A simple hello world example. Exposes http://127.0.0.1:8080
 
 A tiny static content server. Exposes on http://127.0.0.1:8080
 
+## (boot) Boot
+
 Usage:
 
 ```bash
@@ -56,6 +58,8 @@ Usage: static [data-dir] [max-threads] [read-timeout] [write-timeout]
 
   data-dir
 ```
+
+A tiny rest server using Highway Boot. Exposes on http://127.0.0.1:8080
 
 # License
 

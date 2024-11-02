@@ -31,6 +31,9 @@ else ()
     endif ()
 endif ()
 
+#
+# Highway Core
+#
 add_library(highway
         "core/src/highway.c"
         "core/src/hiw_std.c"
@@ -45,6 +48,9 @@ if (BUILD_SHARED_LIBS)
     target_link_libraries(highway PRIVATE wsock32 ws2_32)
 endif ()
 
+#
+# Highway Servlet
+#
 add_library(highway_servlet
         "servlet/src/hiw_servlet.c"
 )
@@ -56,10 +62,25 @@ if (BUILD_SHARED_LIBS)
 endif ()
 
 #
+# Highway Boot
+#
+add_library(highway_boot
+        "boot/src/hiw_boot.c"
+)
+target_include_directories(highway_boot PUBLIC core/include)
+target_include_directories(highway_boot PUBLIC servlet/include)
+target_include_directories(highway_boot PUBLIC boot/include)
+target_link_libraries(highway_boot PRIVATE common)
+if (BUILD_SHARED_LIBS)
+    target_link_libraries(highway_boot PRIVATE wsock32 ws2_32)
+endif ()
+
+#
 # Hello World Executable
 #
 add_executable(examples_hello_world "examples/hello_world/main.c")
 target_include_directories(examples_hello_world PUBLIC core/include)
+target_include_directories(examples_hello_world PUBLIC servlet/include)
 target_link_libraries(examples_hello_world PRIVATE common)
 target_link_libraries(examples_hello_world PRIVATE highway highway_servlet wsock32 ws2_32)
 
@@ -71,7 +92,20 @@ add_executable(examples_static
         "examples/static/static_cache.c"
 )
 target_include_directories(examples_static PUBLIC core/include)
+target_include_directories(examples_static PUBLIC servlet/include)
 target_link_libraries(examples_static PRIVATE common)
 target_link_libraries(examples_static PRIVATE highway highway_servlet wsock32 ws2_32)
+
+#
+# Simple Json REST service using Highway Boot
+#
+add_executable(examples_boot
+        "examples/boot/main.c"
+)
+target_include_directories(examples_boot PUBLIC core/include)
+target_include_directories(examples_boot PUBLIC servlet/include)
+target_include_directories(examples_boot PUBLIC boot/include)
+target_link_libraries(examples_boot PRIVATE common)
+target_link_libraries(examples_boot PRIVATE highway highway_servlet highway_boot wsock32 ws2_32)
 
 
