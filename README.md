@@ -49,8 +49,6 @@ A simple hello world example. Exposes http://127.0.0.1:8080
 
 A tiny static content server. Exposes on http://127.0.0.1:8080
 
-## (boot) Boot
-
 Usage:
 
 ```bash
@@ -59,7 +57,13 @@ Usage: static [data-dir] [max-threads] [read-timeout] [write-timeout]
   data-dir
 ```
 
+## (boot) Boot
+
 A tiny rest server using Highway Boot. Exposes on http://127.0.0.1:8080
+
+## (jc) Json Cache
+
+A json cache server using Highway Boot. Exposes on http://127.0.0.1:8080
 
 # License
 

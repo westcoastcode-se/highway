@@ -6,6 +6,10 @@
 #ifndef hiw_SERVLET_H
 #define hiw_SERVLET_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "hiw_server.h"
 #include "hiw_thread.h"
 
@@ -326,5 +330,9 @@ HIW_PUBLIC extern bool hiw_response_set_connection_close(hiw_response* resp, boo
  * @return true if writing the header was successful
  */
 HIW_PUBLIC extern bool hiw_response_set_status_code(hiw_response* resp, int status);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //hiw_SERVLET_H

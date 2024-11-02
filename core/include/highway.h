@@ -3,8 +3,12 @@
 // See the LICENSE file in the project root for license terms
 //
 
-#ifndef hiw_H
-#define hiw_H
+#ifndef HIGHWAY_H
+#define HIGHWAY_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "hiw_std.h"
 #include "hiw_thread.h"
@@ -42,4 +46,8 @@ HIW_PUBLIC extern bool hiw_init(hiw_init_config config);
  */
 HIW_PUBLIC extern void hiw_release();
 
-#endif //hiw_H
+#ifdef __cplusplus
+}
+#endif
+
+#endif //HIGHWAY_H

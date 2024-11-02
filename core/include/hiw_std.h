@@ -6,6 +6,10 @@
 #ifndef hiw_STD_H
 #define hiw_STD_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -295,5 +299,9 @@ HIW_PUBLIC extern char* hiw_memory_get(hiw_memory* m, int n);
  * @return where the copy stopped in the destination buffer
  */
 HIW_PUBLIC extern char* hiw_std_mempy(const char* src, int n, char* dest, int capacity);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //hiw_STD_H

@@ -6,6 +6,10 @@
 #ifndef HIW_BOOT_H
 #define HIW_BOOT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <highway.h>
 #include <hiw_servlet.h>
 
@@ -21,5 +25,9 @@ extern hiw_servlet_fn hiw_boot_servlet_func;
 * @brief helper define that the developer should use to specify a function
 */
 #define DEFINE_SERVLET_FUNC(target) hiw_servlet_fn hiw_boot_servlet_func = target
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //HIW_BOOT_H

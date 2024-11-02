@@ -6,6 +6,10 @@
 #ifndef hiw_SOCKET_H
 #define hiw_SOCKET_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "hiw_std.h"
 
 #if defined(HIW_WINDOWS)
@@ -143,5 +147,9 @@ HIW_PUBLIC SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_
  * @return
  */
 HIW_PUBLIC SOCKET hiw_socket_accept(SOCKET server_socket, const hiw_socket_config* config, hiw_socket_error* err);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //hiw_SOCKET_H

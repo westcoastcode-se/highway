@@ -6,6 +6,10 @@
 #ifndef hiw_LOGGER_H
 #define hiw_LOGGER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -40,5 +44,9 @@
 // Log an error message. Error messages are faults in the code
 // that originates from the server or if the error is important enough to be visible
 #define log_error(format) fprintf(stderr, "ERROR: " format "\n")
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //hiw_LOGGER_H

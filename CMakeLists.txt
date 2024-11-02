@@ -108,4 +108,14 @@ target_include_directories(examples_boot PUBLIC boot/include)
 target_link_libraries(examples_boot PRIVATE common)
 target_link_libraries(examples_boot PRIVATE highway highway_servlet highway_boot wsock32 ws2_32)
 
-
+#
+# A Json Cache using Highway Boot
+#
+add_executable(examples_jc
+        "examples/jc/main.c"
+)
+target_include_directories(examples_jc PUBLIC core/include)
+target_include_directories(examples_jc PUBLIC servlet/include)
+target_include_directories(examples_jc PUBLIC boot/include)
+target_link_libraries(examples_jc PRIVATE common)
+target_link_libraries(examples_jc PRIVATE highway highway_servlet highway_boot wsock32 ws2_32)

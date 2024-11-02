@@ -6,6 +6,10 @@
 #ifndef hiw_SERVER_H
 #define hiw_SERVER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "hiw_socket.h"
 #include "hiw_std.h"
 
@@ -126,5 +130,9 @@ HIW_PUBLIC extern int hiw_client_send(hiw_client* c, const char* src, int len);
  * Send all data to this client
  */
 HIW_PUBLIC extern int hiw_client_sendall(hiw_client* c, const char* src, int len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //hiw_SERVER_H

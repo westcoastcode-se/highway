@@ -3,8 +3,12 @@
 // See the LICENSE file in the project root for license terms
 //
 
-#ifndef hiw_THREAD_H
-#define hiw_THREAD_H
+#ifndef HIW_THREAD_H
+#define HIW_THREAD_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "hiw_std.h"
 
@@ -138,4 +142,8 @@ HIW_PUBLIC bool hiw_thread_start(hiw_thread* t);
  */
 HIW_PUBLIC void hiw_thread_delete(hiw_thread* t);
 
-#endif //hiw_THREAD_H
+#ifdef __cplusplus
+}
+#endif
+
+#endif //HIW_THREAD_H

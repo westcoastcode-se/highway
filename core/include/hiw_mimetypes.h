@@ -6,6 +6,10 @@
 #ifndef HIW_MIMETYPES_H
 #define HIW_MIMETYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "hiw_std.h"
 
 struct HIW_PUBLIC hiw_mimetypes_s
@@ -42,5 +46,9 @@ HIW_PUBLIC extern hiw_string hiw_mimetype_from_filename(hiw_string filename);
  * @return the mimetype, such as "text/html"
  */
 HIW_PUBLIC extern hiw_string hiw_mimetype_from_suffix(hiw_string suffix);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif//HIW_MIMETYPES_H
