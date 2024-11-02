@@ -16,8 +16,7 @@ void windows_path_to_linux(char* str, int len)
 	// convert the filename into a URI-friendly path
 	for (int i = 0; i < len; ++i)
 	{
-		if (*str == '\\')
-			*str = '/';
+		if (*str == '\\') *str = '/';
 		str++;
 	}
 }
@@ -27,34 +26,12 @@ void windows_path_to_linux(char* str, int len)
 // default cache capacity
 static const cache_content_capacity = 64;
 
-hiw_string static_cache_get_mime_type(hiw_string str)
-{
-	const hiw_string suffix = hiw_string_suffix(str, '.');
-
-	if (hiw_string_cmpc(suffix, ".html", 5))
-		return hiw_mimetypes.text_html;
-
-	if (hiw_string_cmpc(suffix, ".png", 4))
-		return hiw_mimetypes.image_png;
-
-	if (hiw_string_cmpc(suffix, ".css", 4))
-		return hiw_mimetypes.text_css;
-
-	if (hiw_string_cmpc(suffix, ".js", 4))
-		return hiw_mimetypes.text_javascript;
-
-	// ....
-
-	// use text plain if not sure?
-	return hiw_mimetypes.text_plain;
-}
-
 bool static_cache_add(static_cache* cache, const char* filename)
 {
 	log_infof("Caching '%s'", filename);
 
 	// Copy the filename into the memory buffer
-	const int filename_length = strlen(filename) - cache->base_dir.length;
+	const int filename_length = (int)strlen(filename) - cache->base_dir.length;
 	char* const filename_copy = hiw_memory_get(&cache->memory, filename_length);
 	hiw_std_mempy(filename + cache->base_dir.length, filename_length, filename_copy, filename_length);
 
@@ -90,7 +67,7 @@ bool static_cache_add(static_cache* cache, const char* filename)
 	if (cache->content_count % cache_content_capacity == 0)
 	{
 		static_content* const newmem = realloc(cache->content,
-				sizeof(static_content) * (cache->content_count + cache_content_capacity));
+		                                       sizeof(static_content) * (cache->content_count + cache_content_capacity));
 		if (newmem == NULL)
 		{
 			log_error("out of memory");
@@ -101,9 +78,9 @@ bool static_cache_add(static_cache* cache, const char* filename)
 
 	// put the result in the cache
 	cache->content[cache->content_count++] = (static_content){
-			.uri = (hiw_string){ .begin = filename_copy, .length = filename_length },
-			.mime_type = static_cache_get_mime_type(
-					(hiw_string){ .begin = filename_copy, .length = filename_length }),
+			.uri = (hiw_string){.begin = filename_copy, .length = filename_length},
+			.mime_type = hiw_mimetype_from_filename(
+					(hiw_string){.begin = filename_copy, .length = filename_length}),
 			.memory = buf,
 			.length = size,
 	};
@@ -112,7 +89,7 @@ bool static_cache_add(static_cache* cache, const char* filename)
 	return true;
 }
 
-#if defined(_WIN32) || defined(WIN32)
+#if defined(HIW_WINDOWS)
 
 #include <windows.h>
 
@@ -199,8 +176,7 @@ bool load_files_base(static_cache* cache, hiw_string base_dir)
 
 bool static_cache_init(static_cache* cache, hiw_string base_dir)
 {
-	if (!hiw_memory_dynamic_init(&cache->memory, (64 * 1024)))
-		return false;
+	if (!hiw_memory_dynamic_init(&cache->memory, (64 * 1024))) return false;
 	cache->base_dir = base_dir;
 	cache->content = malloc(sizeof(static_content) * cache_content_capacity);
 	cache->content_count = 0;
@@ -215,7 +191,6 @@ bool static_cache_init(static_cache* cache, hiw_string base_dir)
 
 void static_cache_release(static_cache* cache)
 {
-	if (cache->content)
-		free(cache->content);
+	if (cache->content) free(cache->content);
 	hiw_memory_release(&cache->memory);
 }

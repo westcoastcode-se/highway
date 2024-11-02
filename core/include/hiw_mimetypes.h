@@ -19,6 +19,8 @@ struct HIW_PUBLIC hiw_mimetypes_s
     const hiw_string image_png;
 
     const hiw_string application_json;
+
+    const hiw_string application_octet_stream;
 };
 typedef struct hiw_mimetypes_s hiw_mimetypes_s;
 
@@ -26,5 +28,19 @@ typedef struct hiw_mimetypes_s hiw_mimetypes_s;
  * mime types
  */
 HIW_PUBLIC extern const hiw_mimetypes_s hiw_mimetypes;
+
+/**
+ * @brief figure out the mimetype based on the filename
+ * @param filename the filename
+ * @return the mimetype, such as "text/html"
+ */
+HIW_PUBLIC extern hiw_string hiw_mimetype_from_filename(hiw_string filename);
+
+/**
+ * @brief figure out the mimetype based on the suffix - for example: ".html"
+ * @param suffix the suffix
+ * @return the mimetype, such as "text/html"
+ */
+HIW_PUBLIC extern hiw_string hiw_mimetype_from_suffix(hiw_string suffix);
 
 #endif//HIW_MIMETYPES_H

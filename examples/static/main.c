@@ -25,7 +25,7 @@ void stop_server_on_signal(int sig)
 
 void serve_cached_content(hiw_request* req, hiw_response* resp)
 {
-	for(int i = 0; i < cache.content_count; ++i)
+	for (int i = 0; i < cache.content_count; ++i)
 	{
 		const static_content* const c = &cache.content[i];
 		if (hiw_string_cmp(c->uri, req->uri))
@@ -78,7 +78,8 @@ int start(hiw_string data_dir, int num_threads, int read_timeout, int write_time
 	// Release servlet resources
 	hiw_servlet_release(&servlet);
 
-	hiw_server_delete(server);
+	// Server ownership is given to the servlet. It will be responsible for 
+	// cleaning upp it's memory
 	server = NULL;
 
 end_start:
@@ -91,36 +92,42 @@ int main(int argc, char** argv)
 	signal(SIGINT, stop_server_on_signal);
 
 	hiw_string data_dir = hiw_string_const("data");
-	int num_threads = 50;
+	int num_threads = 8;
 	int read_timeout = 5000;
 	int write_timeout = 5000;
 
-	if (argc < 2)
-	{
-		fprintf(stdout, "Usage: static [data-dir] [max-threads] [read-timeout] [write-timeout]");
-		fprintf(stdout, "\n");
-		return 1;
-	}
-
 	if (argc > 1)
 	{
+		if (hiw_string_cmpc(hiw_string_const("--help"), argv[1], (int)strlen(argv[1])))
+		{
+			fprintf(stdout, "Usage: static [data-dir] [max-threads] [read-timeout] [write-timeout]\n");
+			fprintf(stdout, "\n");
+			fprintf(stdout, "\tdata-dir - is the path to the data directory\n");
+			fprintf(stdout, "\tmax-threads - is the maximum number of threads\n");
+			fprintf(stdout, "\tread-timeout - is the read timeout in milliseconds\n");
+			fprintf(stdout, "\twrite-timeout - is the write timeout in milliseconds\n");
+			fprintf(stdout, "\n");
+			return 0;
+		}
+
 		data_dir.begin = argv[1];
-		data_dir.length = strlen(argv[1]);
+		data_dir.length = (int)strlen(argv[1]);
 	}
 
 	if (argc > 2)
 	{
-		num_threads = atoi(argv[2]);
+		num_threads = (int)strtol(argv[2], NULL, 10);
 	}
 
 	if (argc > 3)
 	{
-		read_timeout = atoi(argv[3]);
+
+		read_timeout = (int)strtol(argv[3], NULL, 10);
 	}
 
 	if (argc > 4)
 	{
-		write_timeout = atoi(argv[4]);
+		write_timeout = (int)strtol(argv[4], NULL, 10);
 	}
 
 	return start(data_dir, num_threads, read_timeout, write_timeout);

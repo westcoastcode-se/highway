@@ -344,7 +344,10 @@ void hiw_servlet_release(hiw_servlet* s)
 	}
 
 	if (hiw_bit_test(s->flags, hiw_servlet_flags_server_owner))
+	{
+		hiw_server_stop(s->server);
 		hiw_server_delete(s->server);
+	}
 	s->server = NULL;
 }
 
@@ -715,6 +718,10 @@ void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 int hiw_request_recv(hiw_request* req, char* dest, int n)
 {
 	hiw_internal_request* const impl = (hiw_internal_request*)req;
+
+	// caller did not want to read any bytes
+	if (n == 0)
+		return 0;
 
 	// content length is mandatory if the library should allow reading data from a request
 	if (impl->content_length == 0)

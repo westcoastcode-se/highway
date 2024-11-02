@@ -67,7 +67,8 @@ int main()
 		// release servlet resources
 		hiw_servlet_release(&servlet);
 
-		hiw_server_delete(server);
+		// Server ownership is given to the servlet. It will be responsible for
+		// cleaning upp it's memory
 		server = NULL;
 	}
 
