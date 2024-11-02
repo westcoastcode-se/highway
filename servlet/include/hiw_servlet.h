@@ -6,12 +6,12 @@
 #ifndef hiw_SERVLET_H
 #define hiw_SERVLET_H
 
+#include "hiw_server.h"
+#include "hiw_thread.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "hiw_server.h"
-#include "hiw_thread.h"
 
 // maximum number of headers allowed by highway
 #define HIW_MAX_HEADERS_COUNT (32)

@@ -6,12 +6,12 @@
 #ifndef hiw_SERVER_H
 #define hiw_SERVER_H
 
+#include "hiw_socket.h"
+#include "hiw_std.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "hiw_socket.h"
-#include "hiw_std.h"
 
 struct HIW_PUBLIC hiw_server_config
 {

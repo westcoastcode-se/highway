@@ -6,11 +6,11 @@
 #ifndef HIW_MIMETYPES_H
 #define HIW_MIMETYPES_H
 
+#include "hiw_std.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "hiw_std.h"
 
 struct HIW_PUBLIC hiw_mimetypes_s
 {

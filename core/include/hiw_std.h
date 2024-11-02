@@ -6,25 +6,25 @@
 #ifndef hiw_STD_H
 #define hiw_STD_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdatomic.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(WCC_HTTP_STATIC_LIB)
-#	define hiw_EXPORT
-#	define hiw_IMPORT
+#	define HIW_EXPORT
+#	define HIW_IMPORT
 #else
 #	if defined(_MSC_VER)
-#		define hiw_EXPORT __declspec(dllexport)
-#		define hiw_IMPORT __declspec(dllimport)
+#		define HIW_EXPORT __declspec(dllexport)
+#		define HIW_IMPORT __declspec(dllimport)
 #	elif defined(__GNUC__)
-#		define hiw_EXPORT __attribute__((visibility("default")))
-#		define hiw_IMPORT
+#		define HIW_EXPORT __attribute__((visibility("default")))
+#		define HIW_IMPORT
 #	else
 #		error Unknown dynamic link import/export semantics.
 #	endif
@@ -32,15 +32,15 @@ extern "C" {
 
 #if WCC_HTTP_SLIB_COMPILING
 #	if defined(__cplusplus)
-#		define HIW_PUBLIC extern "C" hiw_EXPORT
+#		define HIW_PUBLIC HIW_EXPORT
 #	else
-#		define HIW_PUBLIC hiw_EXPORT
+#		define HIW_PUBLIC HIW_EXPORT
 #	endif
 #else
 #	if defined(__cplusplus)
-#		define HIW_PUBLIC extern "C" hiw_IMPORT
+#		define HIW_PUBLIC HIW_IMPORT
 #	else
-#		define HIW_PUBLIC hiw_IMPORT
+#		define HIW_PUBLIC HIW_IMPORT
 #	endif
 #endif
 
@@ -96,7 +96,11 @@ typedef struct hiw_string hiw_string;
 #define hiw_string_const_len(str) (sizeof(str) - 1)
 
 // get a compile time string in hiw_string format
-#define hiw_string_const(str) (hiw_string){.begin=str, .length=hiw_string_const_len(str)}
+#ifdef __cplusplus
+# define hiw_string_const(str) {str, hiw_string_const_len(str)}
+#else
+# define hiw_string_const(str) (hiw_string){.begin=str, .length=hiw_string_const_len(str)}
+#endif
 
 /**
  * compare two hiw_strings

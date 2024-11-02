@@ -6,10 +6,6 @@
 #ifndef HIW_BOOT_H
 #define HIW_BOOT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <highway.h>
 #include <hiw_servlet.h>
 
@@ -17,6 +13,10 @@ extern "C" {
 * Highway Boot takes over the responsibility for entry point for the application
 */
 extern int main(int argc, char** argv);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // The function to be called
 extern hiw_servlet_fn hiw_boot_servlet_func;

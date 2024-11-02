@@ -6,12 +6,12 @@
 #ifndef hiw_LOGGER_H
 #define hiw_LOGGER_H
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdio.h>
-#include <stdlib.h>
 
 #ifndef NDEBUG
 #	define log_debugf(format, ...) fprintf(stdout, "DEBUG: " format "\n", __VA_ARGS__)

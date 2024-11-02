@@ -6,10 +6,6 @@
 #ifndef hiw_SOCKET_H
 #define hiw_SOCKET_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "hiw_std.h"
 
 #if defined(HIW_WINDOWS)
@@ -22,6 +18,10 @@ extern "C" {
 #	define hiw_socket_close(s) closesocket(s)
 #else
 #	define SOCKET int
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 // the default port

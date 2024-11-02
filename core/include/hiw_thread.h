@@ -6,11 +6,11 @@
 #ifndef HIW_THREAD_H
 #define HIW_THREAD_H
 
+#include "hiw_std.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "hiw_std.h"
 
 #define hiw_thread_flags_main (1 << 0)
 

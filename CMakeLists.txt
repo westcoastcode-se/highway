@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(highway C)
+project(highway C CXX)
 
 set(CMAKE_C_STANDARD 23)
 set(C_STANDARD_REQUIRED ON)
@@ -109,11 +109,12 @@ target_link_libraries(examples_boot PRIVATE common)
 target_link_libraries(examples_boot PRIVATE highway highway_servlet highway_boot wsock32 ws2_32)
 
 #
-# A Json Cache using Highway Boot
+# A Json Cache using Highway Boot Written in C++23
 #
 add_executable(examples_jc
-        "examples/jc/main.c"
+        "examples/jc/main.cpp"
 )
+set_property(TARGET examples_jc PROPERTY CXX_STANDARD 23)
 target_include_directories(examples_jc PUBLIC core/include)
 target_include_directories(examples_jc PUBLIC servlet/include)
 target_include_directories(examples_jc PUBLIC boot/include)

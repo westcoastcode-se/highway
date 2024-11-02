@@ -6,16 +6,16 @@
 #ifndef HIGHWAY_H
 #define HIGHWAY_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "hiw_std.h"
 #include "hiw_thread.h"
 #include "hiw_socket.h"
 #include "hiw_server.h"
 #include "hiw_logger.h"
 #include "hiw_mimetypes.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @brief Initialization properties for highway
