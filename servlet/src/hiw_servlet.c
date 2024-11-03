@@ -222,17 +222,25 @@ void hiw_servlet_set_starter_func(hiw_servlet* s, hiw_servlet_start_fn func)
 
 void hiw_servlet_start_func_default(hiw_servlet_thread* st)
 {
+	log_debugf("hiw_thread(%p) default start function", st->thread);
+	
 	hiw_servlet_start_filter_chain(st);
+
+	log_debugf("hiw_thread(%p) default start function done", st->thread);
 }
 
 void hiw_servlet_func(hiw_thread* t)
 {
+	log_debugf("hiw_thread(%p) servlet thread starting", t);
+
 	// The servlet thread
 	hiw_servlet_thread* const st = hiw_thread_get_userdata(t);
 
 	// Start the actual servlet
 	if (st->servlet->start_func != NULL) st->servlet->start_func(st);
 	else hiw_servlet_start_func_default(st);
+
+	log_debugf("hiw_thread(%p) servlet thread done", t);
 }
 
 hiw_servlet_thread* hiw_servlet_thread_new()
@@ -252,9 +260,10 @@ hiw_servlet_thread* hiw_servlet_thread_new()
 
 void hiw_servlet_thread_delete(hiw_servlet_thread* st)
 {
+	log_infof("hiw_servlet_thread(%p) deleting", st);
 	if (st == NULL) return;
-
 	if (st->thread != NULL) hiw_thread_delete(st->thread);
+	log_infof("hiw_servlet_thread(%p) deleted", st);
 	free(st);
 }
 
@@ -340,7 +349,6 @@ void hiw_servlet_release(hiw_servlet* s)
 
 	if (hiw_bit_test(s->flags, hiw_servlet_flags_server_owner))
 	{
-		hiw_server_stop(s->server);
 		hiw_server_delete(s->server);
 	}
 	s->server = NULL;
@@ -643,6 +651,8 @@ bool hiw_response_flush_headers(hiw_internal_response* const resp)
 
 void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 {
+	log_debugf("hiw_thread(%p) start listening to incoming requests in thread", st->thread);
+
 	// Memory used for parsing header data, both for the request and the response
 	char request_stack_memory[HIW_MAX_HEADER_SIZE];
 	char response_stack_memory[HIW_MAX_HEADER_SIZE];
@@ -662,8 +672,12 @@ void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 		// TODO: Consider reusing clients instead of malloc and free
 
 		hiw_client* const client = hiw_server_accept(st->servlet->server);
-		if (client == NULL) continue;// continue will go back up, and if the server is no longer running then exit!
-		log_infof("[t:%p][c:%p] %s connected", request.thread, request.client, hiw_client_get_address(client));
+		if (client == NULL)
+		{
+			log_infof("[t:%p] %d client accept failed", request.thread->thread, request.thread->thread->flags);
+			continue;// continue will go back up, and if the server is no longer running then exit!
+		}
+		log_infof("[t:%p][c:%p] %s connected", request.thread->thread, request.client, hiw_client_get_address(client));
 
 	read_retry:
 		hiw_internal_request_reset(&request, client);
@@ -713,9 +727,10 @@ void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 		if (!response.connection_close) goto read_retry;
 
 	read_abort:
-		log_infof("[t:%p][c:%p] disconnected", request.thread, request.client);
+		log_infof("[t:%p][c:%p] disconnected", request.thread->thread, request.client);
 		hiw_client_delete(client);
 	}
+	log_infof("[t:%p] shutting down servlet thread", request.thread->thread);
 }
 
 hiw_thread* hiw_request_get_thread(hiw_request* req)

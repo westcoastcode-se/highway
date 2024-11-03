@@ -65,6 +65,7 @@ int main()
 		hiw_servlet_start(&servlet);
 
 		// release servlet resources
+		log_info("main before hiw_servlet_release");
 		hiw_servlet_release(&servlet);
 
 		// Server ownership is given to the servlet. It will be responsible for

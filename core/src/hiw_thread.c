@@ -53,9 +53,12 @@ void* hiw_thread_entrypoint(void* p)
 #endif
 {
 	hiw_internal_thread* const t = (hiw_internal_thread*)p;
+	log_debugf("hiw_thread(%p) thread entrypoint", t);
 	(t->pub.func)(&t->pub);
+	log_debugf("hiw_thread(%p) thread entrypoint done", t);
+	fflush(stdout);
 #if !defined(HIW_WINDOWS)
-	return 0;
+    return NULL;
 #endif
 }
 
@@ -87,6 +90,9 @@ void hiw_thread_stop_and_wait(hiw_thread* t, int wait_ms)
 	assert(t != NULL && "expected 't' to exist");
 	if (t == NULL) return;
 	if (hiw_bit_test(t->flags, hiw_thread_flags_main)) return;
+
+	log_debugf("hiw_thread(%p) stopping and wait", t);
+
 	struct hiw_internal_thread* const impl = (struct hiw_internal_thread*)t;
 
 	// TODO: Add some kind of notification for that we want to close the thread. For the library itself
@@ -103,10 +109,13 @@ void hiw_thread_stop_and_wait(hiw_thread* t, int wait_ms)
 #else
 	if (impl->thread_initialized)
 	{
+		log_debugf("hiw_thread(%p) joining", t);
 		pthread_join(impl->handle, NULL);
 		impl->thread_initialized = false;
 	}
 #endif
+
+	log_debugf("hiw_thread(%p) stopped", t);
 }
 
 hiw_thread* hiw_thread_main()
@@ -191,11 +200,14 @@ bool hiw_thread_start(hiw_thread* t)
 	if (thread->handle != 0)
 	{
 		log_warnf("thread %lld has already started", thread->pub.id);
-		return false;
+		return true;
 	}
+	log_debugf("hiw_thread(%p) starting", t);
 	if (hiw_bit_test(t->flags, hiw_thread_flags_main))
 	{
+		log_debugf("hiw_thread(%p) starting main", t);
 		(t->func)(t);
+		log_debugf("hiw_thread(%p) stopped main", t);
 		return true;
 	}
 	else
@@ -209,13 +221,14 @@ bool hiw_thread_start(hiw_thread* t)
 			return false;
 		}
 #else
-		const int ret = pthread_create(&thread->handle, NULL, hiw_thread_entrypoint, NULL);
+		const int ret = pthread_create(&thread->handle, NULL, hiw_thread_entrypoint, t);
 		if (ret != 0)
 		{
 			log_errorf("could not spawn new thread. pthread_create = %d", ret);
 			return false;
 		}
 		thread->thread_initialized = true;
+		pthread_detach(thread->handle);
 #endif
 		return true;
 	}
@@ -227,6 +240,7 @@ void hiw_thread_delete(hiw_thread* t)
 	if (t == NULL) return;
 	if (hiw_bit_test(t->flags, hiw_thread_flags_main)) return;
 	struct hiw_internal_thread* const thread = (struct hiw_internal_thread*)t;
+	log_debugf("hiw_thread(%p) deleting", t);
 	hiw_thread_stop_and_wait(t, 30000);
 	free(thread);
 }

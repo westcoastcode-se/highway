@@ -6,6 +6,7 @@
 #include "hiw_server.h"
 #include "hiw_logger.h"
 #include <assert.h>
+#include <hiw_thread.h>
 
 struct hiw_internal_server
 {
@@ -103,12 +104,17 @@ void hiw_server_stop(hiw_server* s)
 	assert(s != NULL && "expected 's' to exist");
 	if (s == NULL) return;
 	hiw_internal_server* const impl = (hiw_internal_server*)s;
-	impl->running = false;
-	if (impl->socket != INVALID_SOCKET)
+	if (impl->running)
 	{
-		hiw_socket_close(impl->socket);
-		impl->socket = INVALID_SOCKET;
+		impl->running = false;
+		if (impl->socket != INVALID_SOCKET)
+		{
+			log_debugf("hiw_server(%p) closing socket", s);
+			hiw_socket_close(impl->socket);
+			impl->socket = INVALID_SOCKET;
+		}
 	}
+	log_debugf("hiw_server(%p) highway server stopped", s);
 }
 
 void hiw_server_delete(hiw_server* s)
@@ -120,6 +126,7 @@ void hiw_server_delete(hiw_server* s)
 			"it is recommended that you stop the server before deleting it's internal resources");
 	if (impl->socket != INVALID_SOCKET)
 	{
+		log_debugf("hiw_server(%p) closing socket", s);
 		hiw_socket_close(impl->socket);
 		impl->socket = INVALID_SOCKET;
 	}
@@ -150,7 +157,7 @@ hiw_client* hiw_server_accept(hiw_server* s)
 	const SOCKET client_socket = hiw_socket_accept(impl->socket, &impl->pub.config.socket_config, &err);
 	if (client_socket == INVALID_SOCKET)
 	{
-		log_info("Failed to accept client socket");
+		log_debugf("hiw_server(%p) failed to accept socket", s);
 		return NULL;
 	}
 
