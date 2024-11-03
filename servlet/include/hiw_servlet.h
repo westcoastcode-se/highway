@@ -20,83 +20,89 @@ extern "C" {
 #define HIW_MAX_HEADER_SIZE (8 * 1024)
 
 /**
- * A wcc http header
+ * A highway http header
  */
 struct HIW_PUBLIC hiw_header
 {
-	// The header name
-	hiw_string name;
+ // The header name
+ hiw_string name;
 
-	// The header value
-	hiw_string value;
+ // The header value
+ hiw_string value;
 };
+
 typedef struct hiw_header hiw_header;
 
 /**
- * A wcc http header
+ * A highway http header
  */
 struct HIW_PUBLIC hiw_headers
 {
-	// memory for all headers
-	hiw_header headers[HIW_MAX_HEADERS_COUNT];
+ // memory for all headers
+ hiw_header headers[HIW_MAX_HEADERS_COUNT];
 
-	// number of headers
-	int count;
+ // number of headers
+ int count;
 };
+
 typedef struct hiw_headers hiw_headers;
 
 /**
- * A wcc http request
+ * A highway http request
  */
 struct HIW_PUBLIC hiw_request
 {
-	// The request method
-	hiw_string method;
+ // The request method
+ hiw_string method;
 
-	// The request uri
-	hiw_string uri;
+ // The request uri
+ hiw_string uri;
 
-	// Headers sent from the client
-	hiw_headers headers;
+ // Headers sent from the client
+ hiw_headers headers;
 
-	// content_length received from the client
-	int content_length;
+ // content_length received from the client
+ int content_length;
 };
+
 typedef struct hiw_request hiw_request;
 
 /**
- * A wcc http response
+ * A highway http response
  */
 struct HIW_PUBLIC hiw_response
 {
-	// Headers to be sent to the server
-	hiw_headers headers;
+ // Headers to be sent to the server
+ hiw_headers headers;
 };
+
 typedef struct hiw_response hiw_response;
 
 // Function called when running the filter
-HIW_PUBLIC typedef void (* hiw_filter_fn)(hiw_request*, hiw_response*, const struct hiw_filter_chain*);
+HIW_PUBLIC typedef void (*hiw_filter_fn)(hiw_request*, hiw_response*, const struct hiw_filter_chain*);
 
 /**
- * A filter
+ * A highway filter
  */
 struct HIW_PUBLIC hiw_filter
 {
-	// The function
-	hiw_filter_fn func;
+ // The function
+ hiw_filter_fn func;
 
-	// User-data associated with this filter
-	void* data;
+ // User-data associated with this filter
+ void* data;
 };
+
 typedef struct hiw_filter hiw_filter;
 
 /**
- * A filter
+ * A highway filter chain
  */
 struct HIW_PUBLIC hiw_filter_chain
 {
-	const hiw_filter* filters;
+ const hiw_filter* filters;
 };
+
 typedef struct hiw_filter_chain hiw_filter_chain;
 
 /**
@@ -104,50 +110,55 @@ typedef struct hiw_filter_chain hiw_filter_chain;
  */
 struct HIW_PUBLIC hiw_servlet_config
 {
-	// number of threads
-	int num_threads;
+ // number of threads
+ int num_threads;
+
+ // Generic global user-data
+ void* userdata;
 };
+
 typedef struct hiw_servlet_config hiw_servlet_config;
 
 // the default port
-#define hiw_SERVLET_DEFAULT_NUM_THREADS (8)
+#define HIW_SERVLET_DEFAULT_NUM_THREADS (8)
 
 // default configuration
-#define hiw_servlet_config_default (hiw_servlet_config) { .num_threads = hiw_SERVLET_DEFAULT_NUM_THREADS }
+#define hiw_servlet_config_default (hiw_servlet_config) { .num_threads = HIW_SERVLET_DEFAULT_NUM_THREADS, .userdata = NULL }
 
 // A function definition for when a new servlet thread is spawned
-typedef void (* hiw_servlet_start_fn)(struct hiw_servlet_thread*);
+typedef void (*hiw_servlet_start_fn)(struct hiw_servlet_thread*);
 
 // A function definition for a servlet function
-typedef void (* hiw_servlet_fn)(hiw_request*, hiw_response*);
+typedef void (*hiw_servlet_fn)(hiw_request*, hiw_response*);
 
 /**
  * The servlet is the entry-point of all http requests
  */
 struct HIW_PUBLIC hiw_servlet
 {
-	// The filter chain used by all servlet threads
-	hiw_filter_chain filter_chain;
+ // The filter chain used by all servlet threads
+ hiw_filter_chain filter_chain;
 
-	// The servlet function to be called when all filters have passed
-	hiw_servlet_fn servlet_func;
+ // The servlet function to be called when all filters have passed
+ hiw_servlet_fn servlet_func;
 
-	// Config
-	hiw_servlet_config config;
+ // Config
+ hiw_servlet_config config;
 
-	// The start function. Note that you are expected to call
-	// hiw_servlet_thread_start(thread)
-	hiw_servlet_start_fn start_func;
+ // The start function. Note that you are expected to call
+ // hiw_servlet_thread_start(thread)
+ hiw_servlet_start_fn start_func;
 
-	// The threads
-	struct hiw_servlet_thread* threads;
+ // A linked-list of threads
+ struct hiw_servlet_thread* threads;
 
-	// The underlying server socket
-	hiw_server* server;
+ // The underlying server socket
+ hiw_server* server;
 
-	// Flags associated with the servlet
-	int flags;
+ // Flags associated with the servlet
+ int flags;
 };
+
 typedef struct hiw_servlet hiw_servlet;
 
 // A flag that the servlet owns the memory of the server
@@ -158,31 +169,33 @@ typedef struct hiw_servlet hiw_servlet;
  */
 struct HIW_PUBLIC hiw_servlet_thread
 {
-	// The servlet
-	hiw_servlet* servlet;
+ // The servlet
+ hiw_servlet* servlet;
 
-	// The thread this servlet
-	hiw_thread* thread;
+ // The thread this servlet
+ hiw_thread* thread;
 
-	// Filter chain running this servlet
-	hiw_filter_chain filter_chain;
+ // The filter chain used in this servlet thread
+ hiw_filter_chain filter_chain;
 
-	// The next thread
-	struct hiw_servlet_thread* next;
+ // The next thread
+ struct hiw_servlet_thread* next;
 };
+
 typedef struct hiw_servlet_thread hiw_servlet_thread;
 
 enum HIW_PUBLIC hiw_servlet_error
 {
-	// No error
-	hiw_SERVLET_ERROR_NO_ERROR = 0,
+ // No error
+ HIW_SERVLET_ERROR_NO_ERROR = 0,
 
-	// No servlet
-	hiw_SERVLET_ERROR_NULL,
+ // No servlet
+ HIW_SERVLET_ERROR_NULL,
 
-	// out of memory
-	hiw_SERVLET_ERROR_OUT_OF_MEMORY,
+ // out of memory
+ HIW_SERVLET_ERROR_OUT_OF_MEMORY,
 };
+
 typedef enum hiw_servlet_error hiw_servlet_error;
 
 /**
@@ -271,6 +284,14 @@ HIW_PUBLIC extern void hiw_filter_chain_next(hiw_request* req, hiw_response* res
  * @param st the highway servlet thread
  */
 HIW_PUBLIC extern void hiw_servlet_start_filter_chain(hiw_servlet_thread* st);
+
+/**
+ * Get the thread associated with the supplied request
+ *
+ * @param req the request
+ * @return the thread associated with the supplier request
+ */
+HIW_PUBLIC extern hiw_thread* hiw_request_get_thread(hiw_request* req);
 
 /**
  * @brief Receive data from the supplier request

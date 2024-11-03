@@ -38,13 +38,13 @@ typedef struct hiw_server hiw_server;
 enum HIW_PUBLIC hiw_server_error
 {
     // Everything is fine!
-    hiw_SERVER_ERROR_NO_ERROR = 0,
+    HIW_SERVER_ERROR_NO_ERROR = 0,
 
     // Memory error, most likely because missing server memory
-    hiw_SERVER_ERROR_MEMORY,
+    HIW_SERVER_ERROR_MEMORY,
 
     // underlying socket error
-    hiw_SERVER_ERROR_SOCKET,
+    HIW_SERVER_ERROR_SOCKET,
 };
 
 typedef enum hiw_server_error hiw_server_error;

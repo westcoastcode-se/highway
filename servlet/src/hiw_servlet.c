@@ -7,7 +7,8 @@
 #include "hiw_logger.h"
 #include <assert.h>
 
-struct hiw_internal_request {
+struct hiw_internal_request
+{
 	// public implementation
 	hiw_request pub;
 
@@ -35,6 +36,7 @@ struct hiw_internal_request {
 	// How much of the content length is left to be read
 	int content_length_remaining;
 };
+
 typedef struct hiw_internal_request hiw_internal_request;
 
 // An error has occurred during the writing
@@ -52,7 +54,8 @@ typedef struct hiw_internal_request hiw_internal_request;
 // The status code is written
 #define hiw_internal_response_flag_status_code_set (1 << 4)
 
-struct hiw_internal_response {
+struct hiw_internal_response
+{
 	// public implementation
 	hiw_response pub;
 
@@ -82,6 +85,7 @@ struct hiw_internal_response {
 	// Keep track of the expected number of bytes left to be sent
 	int content_bytes_left;
 };
+
 typedef struct hiw_internal_response hiw_internal_response;
 
 bool hiw_internal_response_error(hiw_internal_response* r)
@@ -190,8 +194,7 @@ hiw_servlet* hiw_servlet_init(hiw_servlet* s, hiw_server* server)
 void hiw_servlet_delete(hiw_servlet* s)
 {
 	assert(s != NULL && "expected 's' to exist");
-	if (s == NULL)
-		return;
+	if (s == NULL) return;
 	hiw_servlet_release(s);
 	free(s);
 }
@@ -199,24 +202,21 @@ void hiw_servlet_delete(hiw_servlet* s)
 void hiw_servlet_set_filter_chain(hiw_servlet* s, const hiw_filter* filters)
 {
 	assert(s != NULL && "expected 's' to exist");
-	if (s == NULL)
-		return;
+	if (s == NULL) return;
 	s->filter_chain.filters = filters;
 }
 
 void hiw_servlet_set_func(hiw_servlet* s, hiw_servlet_fn func)
 {
 	assert(s != NULL && "expected 's' to exist");
-	if (s == NULL)
-		return;
+	if (s == NULL) return;
 	s->servlet_func = func;
 }
 
 void hiw_servlet_set_starter_func(hiw_servlet* s, hiw_servlet_start_fn func)
 {
 	assert(s != NULL && "expected 's' to exist");
-	if (s == NULL)
-		return;
+	if (s == NULL) return;
 	s->start_func = func;
 }
 
@@ -231,10 +231,8 @@ void hiw_servlet_func(hiw_thread* t)
 	hiw_servlet_thread* const st = (hiw_servlet_thread*)hiw_thread_get_userdata(t);
 
 	// Start the actual servlet
-	if (st->servlet->start_func != NULL)
-		st->servlet->start_func(st);
-	else
-		hiw_servlet_start_func_default(st);
+	if (st->servlet->start_func != NULL) st->servlet->start_func(st);
+	else hiw_servlet_start_func_default(st);
 }
 
 hiw_servlet_thread* hiw_servlet_thread_new()
@@ -254,19 +252,16 @@ hiw_servlet_thread* hiw_servlet_thread_new()
 
 void hiw_servlet_thread_delete(hiw_servlet_thread* st)
 {
-	if (st == NULL)
-		return;
+	if (st == NULL) return;
 
-	if (st->thread != NULL)
-		hiw_thread_delete(st->thread);
+	if (st->thread != NULL) hiw_thread_delete(st->thread);
 	free(st);
 }
 
 hiw_servlet_error hiw_servlet_start(hiw_servlet* s)
 {
 	assert(s != NULL && "expected 's' to exist");
-	if (s == NULL)
-		return hiw_SERVLET_ERROR_NULL;
+	if (s == NULL) return HIW_SERVLET_ERROR_NULL;
 
 	log_infof("hiw_servlet(%p) is spawning %d threads", s, s->config.num_threads);
 
@@ -285,7 +280,7 @@ hiw_servlet_error hiw_servlet_start(hiw_servlet* s)
 				hiw_servlet_thread_delete(first);
 				first = next;
 			}
-			return hiw_SERVLET_ERROR_OUT_OF_MEMORY;
+			return HIW_SERVLET_ERROR_OUT_OF_MEMORY;
 		}
 
 		st->servlet = s;
@@ -327,7 +322,7 @@ hiw_servlet_error hiw_servlet_start(hiw_servlet* s)
 	hiw_thread_set_func(main_servlet_thread.thread, hiw_servlet_func);
 	hiw_thread_start(main_servlet_thread.thread);
 
-	return hiw_SERVLET_ERROR_NO_ERROR;
+	return HIW_SERVLET_ERROR_NO_ERROR;
 }
 
 void hiw_servlet_release(hiw_servlet* s)
@@ -393,7 +388,7 @@ bool hiw_internal_request_parse_status_line(hiw_internal_request* req, hiw_strin
 	if (!hiw_string_cmpc(http_version, "HTTP/1.1", 8))
 	{
 		log_infof("[t:%p][c:%p] received an unsupported HTTP version %.*s", req->thread, req->client,
-				  http_version.length, http_version.begin);
+		          http_version.length, http_version.begin);
 		return false;
 	}
 
@@ -436,8 +431,7 @@ bool hiw_internal_request_read_headers(hiw_internal_request* req)
 		bytes_read += count;
 
 		// try to read the status line, which is in the beginning of the http request
-		if (hiw_string_readline(&(hiw_string){.begin = memory->ptr, .length = count}, &status_line))
-			break;
+		if (hiw_string_readline(&(hiw_string){.begin = memory->ptr, .length = count}, &status_line)) break;
 
 		// if we've read as much data the header is allowed to read from, and we still haven't gotten a
 		// line, then assume that the status line is invalid
@@ -449,8 +443,7 @@ bool hiw_internal_request_read_headers(hiw_internal_request* req)
 	}
 
 	// try to parse the status line, which is the first line in the request buffer
-	if (!hiw_internal_request_parse_status_line(req, status_line))
-		return false;
+	if (!hiw_internal_request_parse_status_line(req, status_line)) return false;
 
 	// special case, in which the status line is the entire allowed buffer. This can happen
 	// if the URI is very long
@@ -547,7 +540,7 @@ bool hiw_internal_request_read_headers(hiw_internal_request* req)
 		if (capacity_left <= 0)
 		{
 			log_errorf("[t:%p][c:%p] request's header-size is larger than the maximum allowed size of %d bytes",
-					   req->thread, req->client, HIW_MAX_HEADER_SIZE);
+			           req->thread, req->client, HIW_MAX_HEADER_SIZE);
 			return false;
 		}
 
@@ -557,7 +550,7 @@ bool hiw_internal_request_read_headers(hiw_internal_request* req)
 		if (count <= 0)
 		{
 			log_errorf("[t:%p][c:%p] failed to read the rest of the data from client",
-					   req->thread, req->client);
+			           req->thread, req->client);
 			return false;
 		}
 		bytes_read += count;
@@ -572,8 +565,7 @@ done:
 bool hiw_internal_response_write_raw(hiw_internal_response* const resp, const char* src, int n)
 {
 	char* const dest = hiw_memory_get(&resp->memory, n);
-	if (dest == NULL)
-		return hiw_internal_response_error(resp);
+	if (dest == NULL) return hiw_internal_response_error(resp);
 	hiw_std_mempy(src, n, dest, n);
 	return true;
 }
@@ -655,8 +647,7 @@ void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 		// TODO: Consider reusing clients instead of malloc and free
 
 		hiw_client* const client = hiw_server_accept(st->servlet->server);
-		if (client == NULL)
-			continue;// continue will go back up, and if the server is no longer running then exit!
+		if (client == NULL) continue;// continue will go back up, and if the server is no longer running then exit!
 		log_infof("[t:%p][c:%p] %s connected", request.thread, request.client, hiw_client_get_address(client));
 
 	read_retry:
@@ -670,22 +661,20 @@ void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 			goto read_abort;
 		}
 		log_infof("[t:%p][c:%p] %.*s %.*s", request.thread, request.client,
-				  request.pub.method.length, request.pub.method.begin, request.pub.uri.length, request.pub.uri.begin);
+		          request.pub.method.length, request.pub.method.begin, request.pub.uri.length, request.pub.uri.begin);
 
 		response.connection_close = request.connection_close;
 
 		// Iterate over all filters and then, eventually, get to the actual servlet function!
-		if (st->filter_chain.filters != NULL)
-			st->filter_chain.filters->func(&request.pub, &response.pub, &st->filter_chain);
-		else if (st->servlet->servlet_func != NULL)
-			st->servlet->servlet_func(&request.pub, &response.pub);
+		if (st->filter_chain.filters != NULL) st->filter_chain.filters->func(&request.pub, &response.pub, &st->filter_chain);
+		else if (st->servlet->servlet_func != NULL) st->servlet->servlet_func(&request.pub, &response.pub);
 
 		// Verify that we've read all content from the client. If not, then the client sent a Content-Length header
 		// that's larger than what the servlet read
 		if (request.content_length_remaining > 0)
 		{
 			log_errorf("[t:%p][c:%p] client sent %d bytes but only read %d bytes, connection will forcefully close",
-					   request.thread, request.client, request.content_length, request.content_length_remaining);
+			           request.thread, request.client, request.content_length, request.content_length_remaining);
 			response.connection_close = true;
 			goto read_abort;
 		}
@@ -706,8 +695,7 @@ void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 		}
 
 		// reuse connection if possible
-		if (!response.connection_close)
-			goto read_retry;
+		if (!response.connection_close) goto read_retry;
 
 	read_abort:
 		log_infof("[t:%p][c:%p] disconnected", request.thread, request.client);
@@ -715,26 +703,28 @@ void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 	}
 }
 
+hiw_thread* hiw_request_get_thread(hiw_request* req)
+{
+	hiw_internal_request* const request = (hiw_internal_request*)req;
+	return request->thread->thread;
+}
+
 int hiw_request_recv(hiw_request* req, char* dest, int n)
 {
 	hiw_internal_request* const impl = (hiw_internal_request*)req;
 
 	// caller did not want to read any bytes
-	if (n == 0)
-		return 0;
+	if (n == 0) return 0;
 
 	// content length is mandatory if the library should allow reading data from a request
-	if (impl->content_length == 0)
-		return -1;
+	if (impl->content_length == 0) return -1;
 
 	// no more content to be read
-	if (impl->content_length_remaining <= 0)
-		return -1;
+	if (impl->content_length_remaining <= 0) return -1;
 
 	// clamp the requested bytes to the content-length
 	n = n > impl->content_length_remaining ? impl->content_length_remaining : n;
-	if (n <= 0)
-		return -1;
+	if (n <= 0) return -1;
 
 	int result = 0;
 
@@ -754,8 +744,7 @@ int hiw_request_recv(hiw_request* req, char* dest, int n)
 	if (n > 0)
 	{
 		const int ret = hiw_client_recv(impl->client, dest, n);
-		if (ret == -1)
-			return -1;
+		if (ret == -1) return -1;
 		result += ret;
 	}
 
@@ -767,8 +756,7 @@ bool hiw_response_write_status_code(hiw_internal_response* resp)
 {
 	int len = hiw_string_const_len("HTTP/1.1 ");
 	char* buf = hiw_memory_get(&resp->memory, len);
-	if (buf == NULL)
-		return hiw_internal_response_out_of_memory(resp);
+	if (buf == NULL) return hiw_internal_response_out_of_memory(resp);
 	hiw_std_mempy("HTTP/1.1 ", len, buf, len);
 
 	switch (resp->status_code)
@@ -776,24 +764,21 @@ bool hiw_response_write_status_code(hiw_internal_response* resp)
 	case 200:
 		len = hiw_string_const_len("200 OK\r\n");
 		buf = hiw_memory_get(&resp->memory, len);
-		if (buf == NULL)
-			return hiw_internal_response_out_of_memory(resp);
+		if (buf == NULL) return hiw_internal_response_out_of_memory(resp);
 		hiw_std_mempy("200 OK\r\n", len, buf, len);
 		break;
 
 	case 404:
 		len = hiw_string_const_len("404 Not Found\r\n");
 		buf = hiw_memory_get(&resp->memory, len);
-		if (buf == NULL)
-			return hiw_internal_response_out_of_memory(resp);
+		if (buf == NULL) return hiw_internal_response_out_of_memory(resp);
 		hiw_std_mempy("404 Not Found\r\n", len, buf, len);
 		break;
 	case 418:
 	default:
 		len = hiw_string_const_len("418 I'm a teapot\r\n");
 		buf = hiw_memory_get(&resp->memory, len);
-		if (buf == NULL)
-			return hiw_internal_response_out_of_memory(resp);
+		if (buf == NULL) return hiw_internal_response_out_of_memory(resp);
 		hiw_std_mempy("418 I'm a teapot\r\n", len, buf, len);
 		break;
 	}
@@ -803,8 +788,7 @@ bool hiw_response_write_status_code(hiw_internal_response* resp)
 bool hiw_response_write_header(hiw_response* const resp, const hiw_header header)
 {
 	assert(resp != NULL);
-	if (resp == NULL)
-		return false;
+	if (resp == NULL) return false;
 	hiw_internal_response* const impl = (hiw_internal_response*)resp;
 
 	if (hiw_bit_test(impl->flags, hiw_internal_response_flag_headers_sent))
@@ -825,7 +809,7 @@ bool hiw_response_write_header(hiw_response* const resp, const hiw_header header
 		if (hiw_string_cmp(resp->headers.headers[i].name, header.name))
 		{
 			log_errorf("[t:%p][c:%p] header %.*s is already added", impl->thread, impl->client,
-					   resp->headers.headers[i].name.length, resp->headers.headers[i].name.begin);
+			           resp->headers.headers[i].name.length, resp->headers.headers[i].name.begin);
 			return hiw_internal_response_error(impl);
 		}
 	}
@@ -851,21 +835,18 @@ bool hiw_response_write_header(hiw_response* const resp, const hiw_header header
 
 	// write the header name to the buffer
 	char* dest = hiw_memory_get(&impl->memory, header.name.length);
-	if (dest == NULL)
-		return hiw_internal_response_out_of_memory(impl);
+	if (dest == NULL) return hiw_internal_response_out_of_memory(impl);
 	hiw_std_mempy(header.name.begin, header.name.length, dest, header.name.length);
 
 	// write ": "
 	dest = hiw_memory_get(&impl->memory, 2);
-	if (dest == NULL)
-		return hiw_internal_response_out_of_memory(impl);
+	if (dest == NULL) return hiw_internal_response_out_of_memory(impl);
 	*dest++ = ':';
 	*dest++ = ' ';
 
 	// write the value + CRLF
 	dest = hiw_memory_get(&impl->memory, header.value.length + 2);
-	if (dest == NULL)
-		return hiw_internal_response_out_of_memory(impl);
+	if (dest == NULL) return hiw_internal_response_out_of_memory(impl);
 	dest = hiw_std_mempy(header.value.begin, header.value.length, dest, header.value.length);
 	*dest++ = '\r';
 	*dest++ = '\n';
@@ -880,8 +861,7 @@ bool hiw_response_write_header(hiw_response* const resp, const hiw_header header
 bool hiw_response_write_body_raw(hiw_response* resp, const char* src, int n)
 {
 	assert(resp != NULL);
-	if (resp == NULL)
-		return false;
+	if (resp == NULL) return false;
 	hiw_internal_response* const impl = (hiw_internal_response*)resp;
 
 	// Flush all headers before sending the first data to the client
@@ -891,13 +871,11 @@ bool hiw_response_write_body_raw(hiw_response* resp, const char* src, int n)
 		if (!hiw_bit_test(impl->flags, hiw_internal_response_flag_content_length_set))
 		{
 			// force the connection to close when the servlet is done writing data to the client
-			if (!hiw_response_set_connection_close(&impl->pub, true))
-				return hiw_internal_response_error(impl);
+			if (!hiw_response_set_connection_close(&impl->pub, true)) return hiw_internal_response_error(impl);
 		}
 
 		// flush all headers, if not already done so
-		if (!hiw_response_flush_headers(impl))
-			return hiw_internal_response_error(impl);
+		if (!hiw_response_flush_headers(impl)) return hiw_internal_response_error(impl);
 	}
 
 	// Send the raw data to the client
@@ -910,8 +888,7 @@ bool hiw_response_write_body_raw(hiw_response* resp, const char* src, int n)
 
 	if (impl->content_length > 0)
 	{
-		if (impl->content_bytes_left > 0)
-			impl->content_bytes_left -= n;
+		if (impl->content_bytes_left > 0) impl->content_bytes_left -= n;
 
 		if (impl->content_bytes_left < 0)
 		{
@@ -933,15 +910,13 @@ bool hiw_response_set_content_length(hiw_response* resp, int len)
 {
 	// Only set this once
 	hiw_internal_response* const impl = (hiw_internal_response*)resp;
-	if (hiw_bit_test(impl->flags, hiw_internal_response_flag_content_length_set))
-		return true;
+	if (hiw_bit_test(impl->flags, hiw_internal_response_flag_content_length_set)) return true;
 
 	const hiw_string content_length_name = hiw_string_const("content-length");
 	char temp[hiw_string_const_len("2147483647")];
 
 	const int written_bytes = (int)(hiw_std_uitoc(temp, sizeof(temp), len) - temp);
-	if (!hiw_response_write_header(resp, (hiw_header){.name = content_length_name, .value.begin = temp, .value.length = written_bytes}))
-		return hiw_internal_response_error(impl);
+	if (!hiw_response_write_header(resp, (hiw_header){.name = content_length_name, .value.begin = temp, .value.length = written_bytes})) return hiw_internal_response_error(impl);
 
 	impl->content_length = len;
 	impl->content_bytes_left = len;
@@ -953,8 +928,7 @@ bool hiw_response_set_connection_close(hiw_response* resp, bool close)
 {
 	// Only set this once
 	hiw_internal_response* const impl = (hiw_internal_response*)resp;
-	if (hiw_bit_test(impl->flags, hiw_internal_response_flag_connection_set))
-		return true;
+	if (hiw_bit_test(impl->flags, hiw_internal_response_flag_connection_set)) return true;
 
 	const hiw_string connection_name = hiw_string_const("connection");
 	const hiw_string connection_close_keep_alive = hiw_string_const("keep-alive");
@@ -983,8 +957,7 @@ bool hiw_response_set_connection_close(hiw_response* resp, bool close)
 bool hiw_response_set_status_code(hiw_response* resp, int status)
 {
 	assert(resp != NULL && "expected 'resp' to exist");
-	if (resp == NULL)
-		return false;
+	if (resp == NULL) return false;
 
 	hiw_internal_response* const impl = (hiw_internal_response*)resp;
 	if (hiw_bit_test(impl->flags, hiw_internal_response_flag_headers_sent))

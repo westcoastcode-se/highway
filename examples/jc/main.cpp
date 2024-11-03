@@ -4,15 +4,42 @@
 //
 
 #include <hiw_boot.h>
+#include <string>
+
+class JsonDrive
+{
+public:
+	JsonDrive()
+	{
+	}
+
+private:
+	std::string mPath;
+};
 
 void on_request(hiw_request* const req, hiw_response* const resp)
 {
-	const hiw_string json = hiw_string_const("{\"name\":\"John Doe\"}");
+	if (hiw_string_cmp(req->method, hiw_string_const("GET")))
+	{
 
-	hiw_response_set_status_code(resp, 200);
-	hiw_response_set_content_length(resp, json.length);
-	hiw_response_set_content_type(resp, hiw_mimetypes.application_json);
-	hiw_response_write_body_raw(resp, json.begin, json.length);
+	}
+	else if (hiw_string_cmp(req->method, hiw_string_const("PUT")))
+	{
+
+	}
+	else if (hiw_string_cmp(req->method, hiw_string_const("DELETE")))
+	{
+
+	}
+
+	hiw_response_set_status_code(resp, 404);
 }
 
-DEFINE_SERVLET_FUNC(on_request);
+void hiw_boot_init(hiw_boot_config* config)
+{
+	// Configure the Highway Boot Framework
+	config->servlet_func = on_request;
+
+	// Start
+	hiw_boot_start(config);
+}

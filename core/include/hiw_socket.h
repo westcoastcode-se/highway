@@ -63,6 +63,7 @@ struct HIW_PUBLIC hiw_socket_config
 	// what ip version is allowed
 	hiw_socket_ip_version ip_version;
 };
+
 typedef struct hiw_socket_config hiw_socket_config;
 
 // default configuration
@@ -127,6 +128,7 @@ enum HIW_PUBLIC hiw_socket_error
 	// Could not accept incoming socket request
 	hiw_SOCKET_ERROR_ACCEPT
 };
+
 typedef enum hiw_socket_error hiw_socket_error;
 
 /**

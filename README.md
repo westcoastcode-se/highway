@@ -1,4 +1,4 @@
-The goal is for hw (pronounced: highway) is to become a low-memory, high-performance HTTP framework for C applications
+The goal is for highway is to become a low-memory, high-performance HTTP framework for C applications
 that can be used to build REST applications.
 
 # Features
