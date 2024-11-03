@@ -48,10 +48,8 @@ extern "C" {
 #	define HIW_WINDOWS 1
 #elif defined(__APPLE__)
 #	define HIW_APPLE 1
-#	error OSX support not implemented yet
 #else
 #	define HIW_LINUX 1
-#	error Linux support not implemented yet
 #endif
 
 #define HIGHWAY_VERSION "0.0.1"
@@ -170,7 +168,7 @@ HIW_PUBLIC extern const char* hiw_std_ctoui(const char* const str, int n, unsign
 * @param i the result
 * @return
 */
-HIW_PUBLIC extern const char* hiw_std_ctoi(const char* const str, int n, unsigned int* i);
+HIW_PUBLIC extern const char* hiw_std_ctoi(const char* const str, int n, int* i);
 
 /**
 * convert the supplied unsigned integer and put the result into the destination buffer

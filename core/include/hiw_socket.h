@@ -17,7 +17,18 @@
 
 #	define hiw_socket_close(s) closesocket(s)
 #else
-#	define SOCKET int
+
+#   include <arpa/inet.h>
+#   include <netinet/in.h>
+#   include <sys/types.h>
+#   include <sys/fcntl.h>
+#   include <unistd.h>
+#   include <sys/socket.h>
+#   include <netdb.h>
+
+#	define hiw_socket_close(s) close(s)
+#   define SOCKET int
+#   define INVALID_SOCKET -1
 #endif
 
 #ifdef __cplusplus
@@ -38,30 +49,30 @@ extern "C" {
 
 typedef enum hiw_socket_ip_version
 {
-	// Allow only IPv4 connections
-	HIW_SOCKET_IPV4,
+    // Allow only IPv4 connections
+    HIW_SOCKET_IPV4,
 
-	// Allow only IPv6 connections
-	HIW_SOCKET_IPV6,
+    // Allow only IPv6 connections
+    HIW_SOCKET_IPV6,
 
-	// Allow both IPv4 and 6 connections. This is the default value
-	HIW_SOCKET_IPV4_AND_6,
+    // Allow both IPv4 and 6 connections. This is the default value
+    HIW_SOCKET_IPV4_AND_6,
 } hiw_socket_ip_version;
 
 // configuration for socket
 struct HIW_PUBLIC hiw_socket_config
 {
-	// The port
-	unsigned short port;
+    // The port
+    unsigned short port;
 
-	// timeout used when reading data over a socket
-	unsigned int read_timeout;
+    // timeout used when reading data over a socket
+    unsigned int read_timeout;
 
-	// timeout used when writing data over a socket
-	unsigned int write_timeout;
+    // timeout used when writing data over a socket
+    unsigned int write_timeout;
 
-	// what ip version is allowed
-	hiw_socket_ip_version ip_version;
+    // what ip version is allowed
+    hiw_socket_ip_version ip_version;
 };
 
 typedef struct hiw_socket_config hiw_socket_config;
@@ -99,34 +110,26 @@ HIW_PUBLIC int hiw_socket_recv(SOCKET s, char* dest, int len);
  */
 HIW_PUBLIC int hiw_socket_send(SOCKET s, const char* dest, int len);
 
-/**
- * Get the last error that happened to the socket
- *
- * @param s The socket
- * @return The error
- */
-HIW_PUBLIC int hiw_socket_last_error(SOCKET s);
-
 enum HIW_PUBLIC hiw_socket_error
 {
-	// No error happened
-	hiw_SOCKET_ERROR_NO_ERROR = 0,
+    // No error happened
+    hiw_SOCKET_ERROR_NO_ERROR = 0,
 
-	// Could not create the socket. Maybe the system is out of memory?
-	hiw_SOCKET_ERROR_CREATE,
+    // Could not create the socket. Maybe the system is out of memory?
+    hiw_SOCKET_ERROR_CREATE,
 
-	// Could not configure socket with properties, such as timeout
-	hiw_SOCKET_ERROR_CONFIG,
+    // Could not configure socket with properties, such as timeout
+    hiw_SOCKET_ERROR_CONFIG,
 
-	// Could not bind socket to address and port. Maybe some other process
-	// is using it?
-	hiw_SOCKET_ERROR_BIND,
+    // Could not bind socket to address and port. Maybe some other process
+    // is using it?
+    hiw_SOCKET_ERROR_BIND,
 
-	// Could not listen for incoming connections
-	hiw_SOCKET_ERROR_LISTEN,
+    // Could not listen for incoming connections
+    hiw_SOCKET_ERROR_LISTEN,
 
-	// Could not accept incoming socket request
-	hiw_SOCKET_ERROR_ACCEPT
+    // Could not accept incoming socket request
+    hiw_SOCKET_ERROR_ACCEPT
 };
 
 typedef enum hiw_socket_error hiw_socket_error;

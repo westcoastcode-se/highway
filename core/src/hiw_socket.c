@@ -47,15 +47,10 @@ int hiw_socket_send(SOCKET s, const char* dest, int len)
 	return send(s, dest, len, 0);
 }
 
-int hiw_socket_last_error(SOCKET s)
-{
-	return WSAGetLastError();
-}
-
 bool hiw_internal_server_bind_ipv4(SOCKET sock, unsigned short port)
 {
 	// bind socket to address and port
-	SOCKADDR_IN addr = { 0 };
+	struct sockaddr_in addr = { 0 };
 	// TODO: allow for binding a specific IP only
 	addr.sin_addr.s_addr = INADDR_ANY;
 	addr.sin_port = htons(port);
@@ -64,7 +59,7 @@ bool hiw_internal_server_bind_ipv4(SOCKET sock, unsigned short port)
 	const int result = bind(sock, (struct sockaddr*)&addr, sizeof(addr));
 	if (result < 0)
 	{
-		log_errorf("could not bind socket: error(%d)", hiw_socket_last_error(sock));
+		log_errorf("could not bind socket: error(%d)", result);
 		return false;
 	}
 	return true;
@@ -82,7 +77,7 @@ bool hiw_internal_server_bind_ipv6(SOCKET sock, unsigned short port)
 	const int result = bind(sock, (struct sockaddr*)&addr, sizeof(addr));
 	if (result < 0)
 	{
-		log_errorf("could not bind socket: error(%d)", hiw_socket_last_error(sock));
+		log_errorf("could not bind socket: error(%d)", result);
 		return false;
 	}
 	return true;
@@ -94,21 +89,26 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 	const SOCKET sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 	if (sock == INVALID_SOCKET)
 	{
-		log_errorf("could not create server socket: error(%d)", hiw_socket_last_error(sock));
+		log_error("could not create server socket");
 		*err = hiw_SOCKET_ERROR_CREATE;
 		return INVALID_SOCKET;
 	}
 
+	int opt;
+	int result;
+
 	// configure socket
-	int opt = 1;
-	int result = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+#ifdef SO_REUSEADDR
+	opt = 1;
+	result = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
 	if (result < 0)
 	{
 		hiw_socket_close(sock);
-		log_errorf("could not configure socket: error(%d)", hiw_socket_last_error(sock));
+		log_errorf("could not configure socket: error(%d)", result);
 		*err = hiw_SOCKET_ERROR_CONFIG;
 		return INVALID_SOCKET;
 	}
+#endif
 
 	// allow for IPv4 address mapping over IPv6
 	if (config->ip_version == HIW_SOCKET_IPV4_AND_6)
@@ -118,7 +118,7 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 		if (result < 0)
 		{
 			hiw_socket_close(sock);
-			log_errorf("could not configure socket: error(%d)", hiw_socket_last_error(sock));
+			log_errorf("could not configure socket: error(%d)", result);
 			*err = hiw_SOCKET_ERROR_CONFIG;
 			return INVALID_SOCKET;
 		}
@@ -130,7 +130,7 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 	if (result < 0)
 	{
 		hiw_socket_close(sock);
-		log_errorf("could not configure socket: error(%d)", hiw_socket_last_error(sock));
+		log_errorf("could not configure socket: error(%d)", result);
 		*err = hiw_SOCKET_ERROR_CONFIG;
 		return INVALID_SOCKET;
 	}
@@ -157,10 +157,11 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 		break;
 	}
 
-	if (listen(sock, 500))
+	result = listen(sock, 500);
+	if (result)
 	{
 		hiw_socket_close(sock);
-		log_errorf("could not listen for incoming requests: error(%d)", hiw_socket_last_error(sock));
+		log_errorf("could not listen for incoming requests: error(%d)", result);
 		*err = hiw_SOCKET_ERROR_LISTEN;
 		return INVALID_SOCKET;
 	}
@@ -177,23 +178,23 @@ SOCKET hiw_socket_accept(SOCKET server_socket, const hiw_socket_config* config, 
 
 	if (config->ip_version == HIW_SOCKET_IPV4)
 	{
-		int addr_len = sizeof(addr);
+		socklen_t addr_len = sizeof(addr);
 		sock = accept(server_socket, (struct sockaddr*)&addr, &addr_len);
 		if (sock == INVALID_SOCKET)
 		{
 			*err = hiw_SOCKET_ERROR_ACCEPT;
-			log_infof("Failed to accept client socket: error(%d)", hiw_socket_last_error(sock));
+			log_info("Failed to accept client socket");
 			return INVALID_SOCKET;
 		}
 	}
 	else
 	{
-		int addr_len = sizeof(addr_v6);
+		socklen_t addr_len = sizeof(addr_v6);
 		sock = accept(server_socket, (struct sockaddr*)&addr_v6, &addr_len);
 		if (sock == INVALID_SOCKET)
 		{
 			*err = hiw_SOCKET_ERROR_ACCEPT;
-			log_infof("Failed to accept client socket: error(%d)", hiw_socket_last_error(sock));
+			log_info("Failed to accept client socket");
 			return INVALID_SOCKET;
 		}
 	}
@@ -205,7 +206,7 @@ SOCKET hiw_socket_accept(SOCKET server_socket, const hiw_socket_config* config, 
 	if (result < 0)
 	{
 		*err = hiw_SOCKET_ERROR_CONFIG;
-		log_errorf("could not configure client socket: error(%d)", hiw_socket_last_error(sock));
+		log_errorf("could not configure client socket: error(%d)", result);
 		hiw_socket_close(sock);
 		return INVALID_SOCKET;
 	}
@@ -215,14 +216,35 @@ SOCKET hiw_socket_accept(SOCKET server_socket, const hiw_socket_config* config, 
 	if (result < 0)
 	{
 		*err = hiw_SOCKET_ERROR_CONFIG;
-		log_errorf("could not configure client socket: error(%d)", hiw_socket_last_error(sock));
+		log_errorf("could not configure client socket: error(%d)", result);
 		hiw_socket_close(sock);
 		return INVALID_SOCKET;
 	}
 
 #else
+	struct timeval tv;
 
-#error Implement for Linux and OSX!!
+	tv.tv_sec = 0;
+	tv.tv_usec = config->read_timeout;
+	int result = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+	if (result < 0)
+	{
+		*err = hiw_SOCKET_ERROR_CONFIG;
+		log_errorf("could not configure client socket: error(%d)", result);
+		hiw_socket_close(sock);
+		return INVALID_SOCKET;
+	}
+
+	tv.tv_sec = 0;
+	tv.tv_usec = config->write_timeout;
+	result = setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv));
+	if (result < 0)
+	{
+		*err = hiw_SOCKET_ERROR_CONFIG;
+		log_errorf("could not configure client socket: error(%d)", result);
+		hiw_socket_close(sock);
+		return INVALID_SOCKET;
+	}
 
 #endif
 

@@ -228,7 +228,7 @@ void hiw_servlet_start_func_default(hiw_servlet_thread* st)
 void hiw_servlet_func(hiw_thread* t)
 {
 	// The servlet thread
-	hiw_servlet_thread* const st = (hiw_servlet_thread*)hiw_thread_get_userdata(t);
+	hiw_servlet_thread* const st = hiw_thread_get_userdata(t);
 
 	// Start the actual servlet
 	if (st->servlet->start_func != NULL) st->servlet->start_func(st);
@@ -237,7 +237,7 @@ void hiw_servlet_func(hiw_thread* t)
 
 hiw_servlet_thread* hiw_servlet_thread_new()
 {
-	hiw_servlet_thread* const st = (hiw_servlet_thread*)malloc(sizeof(hiw_servlet_thread));
+	hiw_servlet_thread* const st = malloc(sizeof(hiw_servlet_thread));
 	if (st == NULL)
 	{
 		log_error("out of memory");

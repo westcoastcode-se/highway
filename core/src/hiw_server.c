@@ -116,7 +116,7 @@ void hiw_server_delete(hiw_server* s)
 	assert(s != NULL && "expected 's' to exist");
 	if (s == NULL) return;
 	hiw_internal_server* const impl = (hiw_internal_server*)s;
-	assert(impl->running == FALSE &&
+	assert(impl->running == false &&
 			"it is recommended that you stop the server before deleting it's internal resources");
 	if (impl->socket != INVALID_SOCKET)
 	{
@@ -137,7 +137,7 @@ bool hiw_server_is_running(hiw_server* s)
 hiw_client* hiw_server_accept(hiw_server* s)
 {
 	assert(s != NULL && "expected 's' to exist");
-	if (s == NULL) return false;
+	if (s == NULL) return NULL;
 	hiw_internal_server* const impl = (hiw_internal_server*)s;
 	if (impl->running == false)
 	{
@@ -146,11 +146,11 @@ hiw_client* hiw_server_accept(hiw_server* s)
 	}
 
 	log_debugf("server(%p) accepting a new client", s);
-	hiw_server_error err = HIW_SERVER_ERROR_NO_ERROR;
+	hiw_socket_error err = hiw_SOCKET_ERROR_NO_ERROR;
 	const SOCKET client_socket = hiw_socket_accept(impl->socket, &impl->pub.config.socket_config, &err);
 	if (client_socket == INVALID_SOCKET)
 	{
-		log_infof("Failed to accept client socket: error(%d)", hiw_socket_last_error(client_socket));
+		log_info("Failed to accept client socket");
 		return NULL;
 	}
 

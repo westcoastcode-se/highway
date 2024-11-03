@@ -150,7 +150,7 @@ const char* hiw_std_ctoui(const char* const str, const int n, unsigned int* i)
 	return s;
 }
 
-const char* hiw_std_ctoi(const char* const str, const int n, unsigned int* i)
+const char* hiw_std_ctoi(const char* const str, const int n, int* i)
 {
 	const char* s = str;
 	const char* const end = s + n;
@@ -162,7 +162,7 @@ const char* hiw_std_ctoi(const char* const str, const int n, unsigned int* i)
 		++s;
 	}
 
-	unsigned int num = 0;
+	int num = 0;
 	for (; s != end; ++s)
 	{
 		if (!isdigit(*s))

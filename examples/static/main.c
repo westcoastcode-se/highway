@@ -7,6 +7,7 @@
 #include "hiw_servlet.h"
 #include "static_cache.h"
 
+#include <string.h>
 #include <stdio.h>
 #include <signal.h>
 
