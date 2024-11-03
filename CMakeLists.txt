@@ -33,6 +33,13 @@ else ()
     set (SOCKET_LIBRARIES)
 endif ()
 
+add_library(common_cpp INTERFACE)
+if (MSVC)
+else ()
+    # Add exception and compile as static
+    # TODO: Should this be configurable?
+    target_link_options(common_cpp INTERFACE "-fexceptions" "-static")
+endif ()
 #
 # Highway Core
 #
@@ -117,4 +124,4 @@ set_property(TARGET examples_jc PROPERTY CXX_STANDARD 23)
 target_include_directories(examples_jc PUBLIC core/include)
 target_include_directories(examples_jc PUBLIC servlet/include)
 target_include_directories(examples_jc PUBLIC boot/include)
-target_link_libraries(examples_jc PRIVATE common highway highway_servlet highway_boot ${SOCKET_LIBRARIES})
+target_link_libraries(examples_jc PRIVATE common common_cpp highway highway_servlet highway_boot ${SOCKET_LIBRARIES})

@@ -86,7 +86,7 @@ private:
 
 		// Try to write the new content
 		FILE* fp = fopen(path.c_str(), "wb");
-		if (fp == nullptr) throw std::exception("could not open resource on disk");
+		if (fp == nullptr) throw std::runtime_error("could not open resource on disk");
 		fwrite(new_data.c_str(), new_data.length(), 1, fp);
 		fclose(fp);
 
@@ -110,7 +110,7 @@ private:
 		fseek(fp, 0, SEEK_SET);
 
 		// Larger than 4 mb?
-		if (length > 4096 * 1024) throw std::exception("file is too large");
+		if (length > 4096 * 1024) throw std::runtime_error("file is too large");
 
 		// Read the data from the HDD
 		string data;
@@ -144,7 +144,7 @@ private:
 
 	[[nodiscard]] string secure_path(string_view relative_path) const
 	{
-		if (relative_path.empty() || relative_path[0] != '/') throw std::exception("invalid path");
+		if (relative_path.empty() || relative_path[0] != '/') throw std::runtime_error("invalid path");
 		return mPath + normalize_path(relative_path);
 	}
 
