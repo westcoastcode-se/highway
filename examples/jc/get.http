@@ -1,0 +1,2 @@
+### Get the test data
+GET http://localhost:8080/test/value

@@ -15,6 +15,11 @@ struct hiw_boot_state
 
 struct hiw_boot_state hiw_app_state;
 
+struct hiw_boot_userdata
+{
+	void* userdata;
+};
+
 /**
 * @brief Function called when a new request is received to this server
 * @param req the incoming request
@@ -61,6 +66,11 @@ void hiw_boot_start(const hiw_boot_config* const config)
 		log_error("failed to initialize server");
 		return;
 	}
+
+	// Set the user-data
+	struct hiw_boot_userdata userdata = (struct hiw_boot_userdata){.userdata = config->userdata};
+	hiw_server_set_userdata(hiw_app_state.server, &userdata);
+
 	// Start the server socket
 	hiw_server_start(hiw_app_state.server);
 
@@ -75,10 +85,17 @@ void hiw_boot_start(const hiw_boot_config* const config)
 	hiw_servlet_release(&servlet);
 }
 
+void* hiw_boot_get_userdata()
+{
+	struct hiw_boot_userdata* userdata = hiw_server_get_userdata(hiw_app_state.server);
+	if (userdata == NULL) return NULL;
+	return userdata->userdata;
+}
+
 /**
  * Pre-start phase
  */
-void hiw_boot_pre_start()
+void hiw_boot_pre_start(int argc, char** argv)
 {
 	// load the configuration
 	hiw_app_state = (struct hiw_boot_state){
@@ -88,7 +105,10 @@ void hiw_boot_pre_start()
 					.servlet_config = hiw_servlet_config_default,
 					.filters = NULL,
 					.servlet_start_func = hiw_boot_servlet_start_default,
-					.servlet_func = NULL
+					.servlet_func = NULL,
+					.userdata = NULL,
+					.argc = argc,
+					.argv = argv
 			}
 	};
 	hiw_boot_init(&hiw_app_state.config);
@@ -98,7 +118,7 @@ int main(int argc, char** argv)
 {
 	signal(SIGINT, hiw_boot_signal);
 	if (!hiw_init(hiw_init_config_default)) return 1;
-	hiw_boot_pre_start();
+	hiw_boot_pre_start(argc, argv);
 	hiw_release();
 	return 0;
 }

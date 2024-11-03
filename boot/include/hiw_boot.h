@@ -38,6 +38,15 @@ struct HIW_PUBLIC hiw_boot_config
 
     // Function called when the server receives a new request
     hiw_servlet_fn servlet_func;
+
+    // User data that's associated with the server
+    void* userdata;
+
+    // Number of arguments received to this application on start
+    int argc;
+
+    // The argument text received to this application on start
+    char** argv;
 };
 
 typedef struct hiw_boot_config hiw_boot_config;
@@ -50,9 +59,16 @@ HIW_PUBLIC extern void hiw_boot_init(hiw_boot_config* config);
 
 /**
  * @brief Start the highway boot application
- * @param config the configuration used
+ * @param config The configuration used
  */
 HIW_PUBLIC extern void hiw_boot_start(const hiw_boot_config* config);
+
+/**
+ * @return The user data associated with the Highway Boot.
+ * @remark Please note that the same user-data is available in all threads. Thread-safety is therefor up to the
+ *         developer to keep track of
+ */
+HIW_PUBLIC extern void* hiw_boot_get_userdata();
 
 #ifdef __cplusplus
 }

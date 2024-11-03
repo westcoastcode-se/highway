@@ -43,6 +43,9 @@ enum HIW_PUBLIC hiw_server_error
     // Memory error, most likely because missing server memory
     HIW_SERVER_ERROR_MEMORY,
 
+    // Error raised if the server is running when it's expected not to
+    HIW_SERVER_ERROR_RUNNING,
+
     // underlying socket error
     HIW_SERVER_ERROR_SOCKET,
 };
@@ -60,6 +63,11 @@ struct HIW_PUBLIC hiw_client
 
 typedef struct hiw_client hiw_client;
 
+ /**
+  * @return true if the supplied error is considered an actual error
+  */
+ HIW_PUBLIC extern bool hiw_server_is_error(hiw_server_error err);
+
 /**
  * @return A new instance of a highway server
  */
@@ -69,6 +77,19 @@ HIW_PUBLIC extern hiw_server* hiw_server_new(const hiw_server_config* config);
  * @return a potential error
  */
 HIW_PUBLIC hiw_server_error hiw_server_start(hiw_server* s);
+
+/**
+ * @return user-data associated with the server
+ */
+HIW_PUBLIC void* hiw_server_get_userdata(hiw_server* s);
+
+/**
+ * @param s the server
+ * @param userdata the user data
+ * @return a value indicating if userdata was set to the server or not
+ * @remark please note that you are not allowed to set the user data after the server has started
+ */
+HIW_PUBLIC hiw_server_error hiw_server_set_userdata(hiw_server* s, void* userdata);
 
 /**
  * @param s The server we want to stop

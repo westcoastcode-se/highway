@@ -54,6 +54,8 @@ extern "C" {
 #	error Linux support not implemented yet
 #endif
 
+#define HIGHWAY_VERSION "0.0.1"
+
 /**
  * Check if the supplied bits are set in value
  */

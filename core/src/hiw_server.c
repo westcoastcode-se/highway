@@ -17,6 +17,9 @@ struct hiw_internal_server
 
 	// Server is running?
 	atomic_bool running;
+
+	// user data associated with the server
+	void* userdata;
 };
 
 typedef struct hiw_internal_server hiw_internal_server;
@@ -38,6 +41,11 @@ struct hiw_internal_client
 
 typedef struct hiw_internal_client hiw_internal_client;
 
+bool hiw_server_is_error(hiw_server_error err)
+{
+	return err != HIW_SERVER_ERROR_NO_ERROR;
+}
+
 hiw_server* hiw_server_new(const hiw_server_config* config)
 {
 	hiw_internal_server* const impl = (hiw_internal_server*)malloc(sizeof(hiw_internal_server));
@@ -48,6 +56,7 @@ hiw_server* hiw_server_new(const hiw_server_config* config)
 	}
 
 	impl->pub.config = *config;
+	impl->userdata = NULL;
 	impl->socket = INVALID_SOCKET;
 	impl->running = false;
 	return &impl->pub;
@@ -68,6 +77,24 @@ hiw_server_error hiw_server_start(hiw_server* s)
 		return HIW_SERVER_ERROR_SOCKET;
 	}
 	impl->running = true;
+	return HIW_SERVER_ERROR_NO_ERROR;
+}
+
+void* hiw_server_get_userdata(hiw_server* s)
+{
+	assert(s != NULL && "expected 's' to exist");
+	if (s == NULL) return NULL;
+	hiw_internal_server* const impl = (hiw_internal_server*)s;
+	return impl->userdata;
+}
+
+hiw_server_error hiw_server_set_userdata(hiw_server* s, void* userdata)
+{
+	assert(s != NULL && "expected 's' to exist");
+	if (s == NULL) return HIW_SERVER_ERROR_MEMORY;
+	hiw_internal_server* const impl = (hiw_internal_server*)s;
+	if (impl->socket != INVALID_SOCKET) return HIW_SERVER_ERROR_RUNNING;
+	impl->userdata = userdata;
 	return HIW_SERVER_ERROR_NO_ERROR;
 }
 

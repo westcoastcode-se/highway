@@ -57,11 +57,11 @@ Usage: static [data-dir] [max-threads] [read-timeout] [write-timeout]
   data-dir
 ```
 
-## (boot) Boot
+## ([boot](examples/boot/main.c)) Hello World using Highway Boot
 
 A tiny rest server using Highway Boot. Exposes on http://127.0.0.1:8080
 
-## (jc) Json Cache
+## ([jc](examples/jc/main.c)) Json Cache
 
 A json cache server using Highway Boot. Exposes on http://127.0.0.1:8080
 

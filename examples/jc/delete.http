@@ -1,0 +1,2 @@
+### Remove the test data
+DELETE http://localhost:8080/test/value

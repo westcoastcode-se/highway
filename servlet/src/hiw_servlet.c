@@ -608,6 +608,21 @@ bool hiw_response_flush_headers(hiw_internal_response* const resp)
 		}
 	}
 
+
+#if HIW_WRITE_SERVER_HEADER == 1
+#	if HIW_WRITE_SERVER_VERSION == 1
+	const hiw_string server_header_name = hiw_string_const("server");
+	const hiw_string server_header_value = hiw_string_const("Highway " HIGHWAY_VERSION);
+#	else
+	const hiw_string server_header_name = hiw_string_const("server" HIGHWAY_VERSION);
+	const hiw_string server_header_value = hiw_string_const("Highway");
+#	endif
+	if (!hiw_response_write_header(&resp->pub, (hiw_header){.name = server_header_name, .value = server_header_value}))
+	{
+		return hiw_internal_response_error(resp);
+	}
+#endif
+
 	// write the header body separator
 	if (!hiw_internal_response_write_raw(resp, "\r\n", 2))
 	{
@@ -768,6 +783,12 @@ bool hiw_response_write_status_code(hiw_internal_response* resp)
 		hiw_std_mempy("200 OK\r\n", len, buf, len);
 		break;
 
+	case 400:
+		len = hiw_string_const_len("400 Bad Request\r\n");
+		buf = hiw_memory_get(&resp->memory, len);
+		if (buf == NULL) return hiw_internal_response_out_of_memory(resp);
+		hiw_std_mempy("400 Bad Request\r\n", len, buf, len);
+		break;
 	case 404:
 		len = hiw_string_const_len("404 Not Found\r\n");
 		buf = hiw_memory_get(&resp->memory, len);

@@ -1,0 +1,8 @@
+### Try add new data
+PUT http://localhost:8080/test/value
+Content-Type: application/json
+
+{
+  "newdata": "test",
+  "key": [1,2,3,4]
+}

@@ -19,6 +19,12 @@ extern "C" {
 // the max header size for a highway http request (8 kb)
 #define HIW_MAX_HEADER_SIZE (8 * 1024)
 
+ // should the server write out the server header
+#define HIW_WRITE_SERVER_HEADER 1
+
+ // should the server version be written in the server header
+#define HIW_WRITE_SERVER_VERSION 1
+
 /**
  * A highway http header
  */
