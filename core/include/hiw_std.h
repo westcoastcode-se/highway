@@ -64,12 +64,13 @@ extern "C" {
  */
 struct HIW_PUBLIC hiw_memory_view
 {
-	// a pointer to where the memory begins
-	const void* begin;
+    // a pointer to where the memory begins
+    const void* begin;
 
-	// the length of the memory
-	int length;
+    // the length of the memory
+    int length;
 };
+
 typedef struct hiw_memory_view hiw_memory_view;
 
 /**
@@ -77,19 +78,21 @@ typedef struct hiw_memory_view hiw_memory_view;
  */
 struct HIW_PUBLIC hiw_string
 {
-	union
-	{
-		hiw_memory_view _memory;
-		struct
-		{
-			// a pointer to where the string begins
-			const char* begin;
+    union
+    {
+        hiw_memory_view _memory;
 
-			// the length of the string
-			int length;
-		};
-	};
+        struct
+        {
+            // a pointer to where the string begins
+            const char* begin;
+
+            // the length of the string
+            int length;
+        };
+    };
 };
+
 typedef struct hiw_string hiw_string;
 
 // figure out a compile-time constant's length
@@ -112,7 +115,7 @@ typedef struct hiw_string hiw_string;
 HIW_PUBLIC extern bool hiw_string_cmp(hiw_string s1, hiw_string s2);
 
 /**
- * @brief Compare a hiw_string with a char array
+ * @brief Copy the source string into the destination buffer
  * @param s1 The string
  * @param c A pointer to the char array
  * @param n The numer of bytes in the char array
@@ -220,20 +223,21 @@ HIW_PUBLIC extern void hiw_string_set(hiw_string* str, const char* s, int len);
  */
 struct HIW_PUBLIC hiw_memory
 {
-	// the starting memory location of the memory
-	char* ptr;
+    // the starting memory location of the memory
+    char* ptr;
 
-	// the current position in the memory
-	char* pos;
+    // the current position in the memory
+    char* pos;
 
-	// the end
-	const char* end;
+    // the end
+    const char* end;
 
-	// how many bytes should we allow to resize this buffer. If this is zero then we
-	// assume that the memory pool is not a dynamic memory pool and doens't do
-	// malloc and free
-	int resize_bytes;
+    // how many bytes should we allow to resize this buffer. If this is zero then we
+    // assume that the memory pool is not a dynamic memory pool and doens't do
+    // malloc and free
+    int resize_bytes;
 };
+
 typedef struct hiw_memory hiw_memory;
 
 /**
@@ -297,12 +301,32 @@ HIW_PUBLIC extern char* hiw_memory_get(hiw_memory* m, int n);
 
 /**
  * Copy raw bytes from a view or memory
- * @param m the memory
+ * @param src the source memory
+ * @param n Length of the source memory
  * @param dest the destination buffer
  * @param capacity destination buffer capacity
  * @return where the copy stopped in the destination buffer
  */
 HIW_PUBLIC extern char* hiw_std_mempy(const char* src, int n, char* dest, int capacity);
+
+ /**
+  * @brief Copy the source string into the destination buffer
+  * @param src A string with a known length
+  * @param n The length of the source string
+  * @param dest the destination buffer
+  * @param capacity The destination capacity
+  * @return A pointer to where the copy stopped
+  */
+ HIW_PUBLIC extern char* hiw_std_copy(const char* src, int n, char* dest, int capacity);
+
+ /**
+  * @brief Compare a hiw_string with a char array
+  * @param src A null-terminated string
+  * @param dest the destination buffer
+  * @param capacity The destination capacity
+  * @return A pointer to where the copy stopped
+  */
+ HIW_PUBLIC extern char* hiw_std_copy0(const char* src, char* dest, int capacity);
 
 #ifdef __cplusplus
 }

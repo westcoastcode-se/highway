@@ -62,6 +62,7 @@ endif ()
 #
 add_library(highway_servlet
         "servlet/src/hiw_servlet.c"
+        "servlet/src/hiw_file_content.c"
 )
 target_include_directories(highway_servlet PUBLIC core/include)
 target_include_directories(highway_servlet PUBLIC servlet/include)

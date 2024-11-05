@@ -7,7 +7,7 @@
 #include "hiw_logger.h"
 #include <assert.h>
 
-hiw_socket_error hiw_socket_set_timeout(SOCKET sock, int read_timeout, int write_timeout)
+hiw_socket_error hiw_socket_set_timeout(SOCKET sock, unsigned int read_timeout, unsigned int write_timeout)
 {
 #if defined(HIW_WINDOWS)
 	DWORD value = read_timeout;
@@ -248,7 +248,7 @@ SOCKET hiw_socket_accept(SOCKET server_socket, const hiw_socket_config* config, 
 		}
 	}
 
-	*err == hiw_socket_set_timeout(sock, config->read_timeout, config->write_timeout);
+	*err = hiw_socket_set_timeout(sock, config->read_timeout, config->write_timeout);
 	if (*err != hiw_SOCKET_ERROR_NO_ERROR)
 	{
 		hiw_socket_close(sock);

@@ -4,6 +4,7 @@
 //
 
 #include "static_cache.h"
+#include "hiw_file_content.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -11,38 +12,27 @@
 
 #if defined(_WIN32)
 
-void windows_path_to_linux(char* str, int len)
-{
-	// convert the filename into a URI-friendly path
-	for (int i = 0; i < len; ++i)
-	{
-		if (*str == '\\') *str = '/';
-		str++;
-	}
-}
-
 #endif
 
 // default cache capacity
 static const cache_content_capacity = 64;
 
-bool static_cache_add(static_cache* cache, const char* filename)
+bool static_cache_add(static_cache* cache, const hiw_file* file)
 {
-	log_infof("Caching '%s'", filename);
+	log_infof("Caching path: '%.*s', filename: '%.*s', suffix: '%.*s'",
+		file->path.length, file->path.begin,
+		file->filename.length, file->filename.begin,
+		file->suffix.length, file->suffix.begin);
 
 	// Copy the filename into the memory buffer
-	const int filename_length = (int)strlen(filename) - cache->base_dir.length;
+	const int filename_length = (int)file->path.length - cache->base_dir.length;
 	char* const filename_copy = hiw_memory_get(&cache->memory, filename_length);
-	hiw_std_mempy(filename + cache->base_dir.length, filename_length, filename_copy, filename_length);
+	hiw_std_mempy(file->path.begin + cache->base_dir.length, filename_length, filename_copy, filename_length);
 
-#if defined(_WIN32)
-	windows_path_to_linux(filename_copy, filename_length);
-#endif
-
-	FILE* f = fopen(filename, "rb");
+	FILE* f = fopen(file->path.begin, "rb");
 	if (f == NULL)
 	{
-		log_errorf("Could not open file '%s'", filename);
+		log_errorf("could not open file '%s'", file->filename.begin);
 		return false;
 	}
 
@@ -53,13 +43,13 @@ bool static_cache_add(static_cache* cache, const char* filename)
 	char* buf = hiw_memory_get(&cache->memory, size);
 	if (buf == NULL)
 	{
-		log_error("Out of memory");
+		log_error("out of memory");
 		return false;
 	}
 
 	if (fread(buf, size, 1, f) != 1)
 	{
-		log_errorf("Failed to read '%s' into memory", filename);
+		log_errorf("failed to read '%s' into memory", file->filename.begin);
 		return false;
 	}
 	fclose(f);
@@ -85,94 +75,16 @@ bool static_cache_add(static_cache* cache, const char* filename)
 			.length = size,
 	};
 
-	log_infof("Cached '%s' as '%.*s'", filename, filename_length, filename_copy);
+	log_infof("cached '%s' as '%.*s'", file->path.begin, filename_length, filename_copy);
 	return true;
 }
 
-#if defined(HIW_WINDOWS)
-
-#include <windows.h>
-
-bool load_files(static_cache* cache, const char* sub_dir)
+bool file_found(const hiw_file* f, void* userdata)
 {
-	WIN32_FIND_DATA fd;
-	HANDLE handle = NULL;
-
-	char path[2048];
-	sprintf(path, "%s\\*.*", sub_dir);
-	log_infof("Scanning %s", path);
-
-	if ((handle = FindFirstFile(path, &fd)) == INVALID_HANDLE_VALUE)
-	{
-		log_errorf("Could not find files in %s", path);
-		return false;
-	}
-
-	do
-	{
-		// ignore . and ..
-		if (strcmp(fd.cFileName, ".") != 0 && strcmp(fd.cFileName, "..") != 0)
-		{
-			sprintf(path, "%s\\%s", sub_dir, fd.cFileName);
-
-			// folder or file?
-			if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-			{
-				load_files(cache, path);
-			}
-			else
-			{
-				static_cache_add(cache, path);
-			}
-		}
-
-	} while (FindNextFile(handle, &fd));
-
-	FindClose(handle);
+	static_cache* cache = (static_cache*)userdata;
+	static_cache_add(cache, f);
 	return true;
 }
-
-bool load_files_base(static_cache* cache, hiw_string base_dir)
-{
-	WIN32_FIND_DATA fd;
-	HANDLE handle = NULL;
-
-	char path[2048];
-	sprintf(path, "%.*s\\*.*", base_dir.length, base_dir.begin);
-	log_infof("Scanning %s", path);
-
-	if ((handle = FindFirstFile(path, &fd)) == INVALID_HANDLE_VALUE)
-	{
-		log_errorf("Could not find files in %s", path);
-		return false;
-	}
-
-	do
-	{
-		// ignore . and ..
-		if (strcmp(fd.cFileName, ".") != 0 && strcmp(fd.cFileName, "..") != 0)
-		{
-			sprintf(path, "%.*s\\%s", base_dir.length, base_dir.begin, fd.cFileName);
-
-			// folder or file?
-			if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-			{
-				load_files(cache, path);
-			}
-			else
-			{
-				static_cache_add(cache, path);
-			}
-		}
-
-	} while (FindNextFile(handle, &fd));
-
-	FindClose(handle);
-	return true;
-}
-
-#else
-#endif
 
 bool static_cache_init(static_cache* cache, hiw_string base_dir)
 {
@@ -180,7 +92,9 @@ bool static_cache_init(static_cache* cache, hiw_string base_dir)
 	cache->base_dir = base_dir;
 	cache->content = malloc(sizeof(static_content) * cache_content_capacity);
 	cache->content_count = 0;
-	if (!load_files_base(cache, base_dir))
+
+	// Traverse all files
+	if (hiw_file_traverse(base_dir, file_found, cache) != HIW_FILE_TRAVERSE_ERROR_SUCCESS)
 	{
 		free(cache->content);
 		hiw_memory_release(&cache->memory);

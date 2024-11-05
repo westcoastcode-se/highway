@@ -3,8 +3,8 @@
 // See the LICENSE file in the project root for license terms
 //
 
-#ifndef hiw_SERVLET_H
-#define hiw_SERVLET_H
+#ifndef HIW_SERVLET_H
+#define HIW_SERVLET_H
 
 #include "hiw_server.h"
 #include "hiw_thread.h"
@@ -361,4 +361,4 @@ HIW_PUBLIC extern bool hiw_response_set_status_code(hiw_response* resp, int stat
 }
 #endif
 
-#endif //hiw_SERVLET_H
+#endif //HIW_SERVLET_H
