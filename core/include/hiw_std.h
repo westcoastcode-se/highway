@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-#if defined(WCC_HTTP_STATIC_LIB)
+#if defined(HIW_HTTP_STATIC_LIB)
 #	define HIW_EXPORT
 #	define HIW_IMPORT
 #else

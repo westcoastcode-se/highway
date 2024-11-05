@@ -47,7 +47,8 @@ void serve_cached_content(hiw_request* req, hiw_response* resp)
 
 int start(hiw_string data_dir, int num_threads, int read_timeout, int write_timeout)
 {
-	log_infof("starting static content server from '%.*s'", data_dir.length, data_dir.begin);
+	log_infof("starting static content server from '%.*s' with num_threads=%d, read_timeout=%d, write_timeout=%d",
+		data_dir.length, data_dir.begin, num_threads, read_timeout, write_timeout);
 
 	if (!static_cache_init(&cache, data_dir))
 	{
@@ -122,7 +123,6 @@ int main(int argc, char** argv)
 
 	if (argc > 3)
 	{
-
 		read_timeout = (int)strtol(argv[3], NULL, 10);
 	}
 

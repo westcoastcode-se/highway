@@ -9,6 +9,8 @@
 
 hiw_socket_error hiw_socket_set_timeout(SOCKET sock, unsigned int read_timeout, unsigned int write_timeout)
 {
+	log_debugf("setting read_timeout=%u ms and write_timeout=%u ms", read_timeout, write_timeout);
+
 #if defined(HIW_WINDOWS)
 	DWORD value = read_timeout;
 	int result = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&value, sizeof(value));
@@ -28,24 +30,26 @@ hiw_socket_error hiw_socket_set_timeout(SOCKET sock, unsigned int read_timeout, 
 #else
 	struct timeval tv;
 
-	tv.tv_sec = 0;
-	tv.tv_usec = read_timeout;
-	int result = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+	tv.tv_sec = read_timeout / 1000;
+	tv.tv_usec = (read_timeout%1000) * 1000;
+	int result = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 	if (result < 0)
 	{
 		log_errorf("could not configure client socket: error(%d)", result);
 		return hiw_SOCKET_ERROR_CONFIG;
 	}
 
-	tv.tv_sec = 0;
-	tv.tv_usec = write_timeout;
-	result = setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv));
+	tv.tv_sec = write_timeout / 1000;
+	tv.tv_usec = (write_timeout%1000) * 1000;
+	result = setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 	if (result < 0)
 	{
 		log_errorf("could not configure client socket: error(%d)", result);
 		return hiw_SOCKET_ERROR_CONFIG;
 	}
 #endif
+
+	log_debug("timeout configured");
 	return hiw_SOCKET_ERROR_NO_ERROR;
 }
 
@@ -177,7 +181,6 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 		return INVALID_SOCKET;
 	}
 #endif
-
 	*err = hiw_socket_set_timeout(sock, config->read_timeout, config->write_timeout);
 	if (*err != hiw_SOCKET_ERROR_NO_ERROR)
 	{

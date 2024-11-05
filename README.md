@@ -38,6 +38,10 @@ that can be used to build REST applications.
       such as UTF-8 and ISO 8859-1 if part of `Content-Type` header (text/html; charset=utf-8)
 - [ ] Security: Memory Leak Detection
 - [ ] Build: CMake options for all default definitions, such as maximum header size
+- [ ] Library: Add a Highway client implementation: `hiw_http_client`
+  - Could be useful adding `detach` support for this, in case of slow IO
+- [ ] Library: Expose multiple server ports, for example a management port for health
+- [ ] Library: Serving files from the disk used for static html content
 - [ ] ...
 
 # Examples
@@ -64,6 +68,13 @@ docker run --rm -it -p 8080:8080 westcoastcode-se/highway/examples_hello_world:l
 ## (static) Static
 
 A tiny static content server. Exposes on http://127.0.0.1:8080
+
+### Build
+
+```bash
+docker build -f examples/static/Dockerfile -t westcoastcode-se/highway/examples_static:latest .
+docker run --rm -it -p 8080:8080 -v ${pwd}/examples/static/data:/data westcoastcode-se/highway/examples_static:latest
+```
 
 ### Usage
 

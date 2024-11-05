@@ -15,7 +15,7 @@
 #endif
 
 // default cache capacity
-static const cache_content_capacity = 64;
+static const int cache_content_capacity = 64;
 
 bool static_cache_add(static_cache* cache, const hiw_file* file)
 {
@@ -88,14 +88,20 @@ bool file_found(const hiw_file* f, void* userdata)
 
 bool static_cache_init(static_cache* cache, hiw_string base_dir)
 {
-	if (!hiw_memory_dynamic_init(&cache->memory, (64 * 1024))) return false;
+	if (!hiw_memory_dynamic_init(&cache->memory, (64 * 1024)))
+	{
+		log_error("could not initialize static cache");
+		return false;
+	}
 	cache->base_dir = base_dir;
 	cache->content = malloc(sizeof(static_content) * cache_content_capacity);
 	cache->content_count = 0;
 
 	// Traverse all files
-	if (hiw_file_traverse(base_dir, file_found, cache) != HIW_FILE_TRAVERSE_ERROR_SUCCESS)
+	const hiw_file_traverse_error err = hiw_file_traverse(base_dir, file_found, cache);
+	if (err != HIW_FILE_TRAVERSE_ERROR_SUCCESS)
 	{
+		log_errorf("failed to traverse static content directory: %d", (int)err);
 		free(cache->content);
 		hiw_memory_release(&cache->memory);
 		return false;

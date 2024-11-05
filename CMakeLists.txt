@@ -19,7 +19,7 @@ if (MSVC)
         target_compile_options(common INTERFACE /O2 /DNDEBUG)
     endif ()
     if (NOT BUILD_SHARED_LIBS)
-        target_compile_options(common INTERFACE /DWCC_HTTP_STATIC_LIB)
+        target_compile_options(common INTERFACE /DHIW_HTTP_STATIC_LIB)
     endif ()
     set (SOCKET_LIBRARIES wsock32 ws2_32)
 else ()
@@ -28,9 +28,15 @@ else ()
         target_compile_options(common INTERFACE -O3 -DNDEBUG)
     endif ()
     if (NOT BUILD_SHARED_LIBS)
-        target_compile_options(common INTERFACE -DWCC_HTTP_STATIC_LIB)
+        target_compile_options(common INTERFACE -DHIW_HTTP_STATIC_LIB)
     endif ()
     set (SOCKET_LIBRARIES)
+endif ()
+
+add_library(statically_link INTERFACE)
+if (MSVC)
+else ()
+    target_link_options(statically_link INTERFACE "-static")
 endif ()
 
 add_library(common_cpp INTERFACE)
@@ -38,8 +44,9 @@ if (MSVC)
 else ()
     # Add exception and compile as static
     # TODO: Should this be configurable?
-    target_link_options(common_cpp INTERFACE "-fexceptions" "-static")
+    target_link_options(common_cpp INTERFACE "-fexceptions")
 endif ()
+
 #
 # Highway Core
 #
@@ -53,9 +60,7 @@ add_library(highway
 )
 target_include_directories(highway PUBLIC core/include)
 target_link_libraries(highway PRIVATE common)
-if (BUILD_SHARED_LIBS)
-    target_link_libraries(highway PRIVATE ${SOCKET_LIBRARIES})
-endif ()
+target_link_libraries(highway PRIVATE ${SOCKET_LIBRARIES})
 
 #
 # Highway Servlet
@@ -67,9 +72,7 @@ add_library(highway_servlet
 target_include_directories(highway_servlet PUBLIC core/include)
 target_include_directories(highway_servlet PUBLIC servlet/include)
 target_link_libraries(highway_servlet PRIVATE common highway)
-if (BUILD_SHARED_LIBS)
-    target_link_libraries(highway_servlet PRIVATE ${SOCKET_LIBRARIES})
-endif ()
+target_link_libraries(highway_servlet PRIVATE ${SOCKET_LIBRARIES})
 
 #
 # Highway Boot
@@ -81,9 +84,7 @@ target_include_directories(highway_boot PUBLIC core/include)
 target_include_directories(highway_boot PUBLIC servlet/include)
 target_include_directories(highway_boot PUBLIC boot/include)
 target_link_libraries(highway_boot PRIVATE common highway highway_servlet)
-if (BUILD_SHARED_LIBS)
-    target_link_libraries(highway_boot PRIVATE ${SOCKET_LIBRARIES})
-endif ()
+target_link_libraries(highway_boot PRIVATE ${SOCKET_LIBRARIES})
 
 #
 # Hello World Executable
@@ -102,7 +103,7 @@ add_executable(examples_static
 )
 target_include_directories(examples_static PUBLIC core/include)
 target_include_directories(examples_static PUBLIC servlet/include)
-target_link_libraries(examples_static PRIVATE common highway highway_servlet ${SOCKET_LIBRARIES})
+target_link_libraries(examples_static PRIVATE common highway highway_servlet statically_link ${SOCKET_LIBRARIES})
 
 #
 # Simple Json REST service using Highway Boot
@@ -125,4 +126,4 @@ set_property(TARGET examples_jc PROPERTY CXX_STANDARD 23)
 target_include_directories(examples_jc PUBLIC core/include)
 target_include_directories(examples_jc PUBLIC servlet/include)
 target_include_directories(examples_jc PUBLIC boot/include)
-target_link_libraries(examples_jc PRIVATE common common_cpp highway highway_servlet highway_boot ${SOCKET_LIBRARIES})
+target_link_libraries(examples_jc PRIVATE common common_cpp statically_link highway highway_servlet highway_boot ${SOCKET_LIBRARIES})
