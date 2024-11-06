@@ -3,19 +3,19 @@
 // See the LICENSE file in the project root for license terms
 //
 
+#include <cstdio>
+#include <exception>
 #include <hiw_boot.h>
+#include <iostream>
+#include <mutex>
+#include <sstream>
 #include <string>
 #include <string_view>
-#include <exception>
 #include <unordered_map>
-#include <iostream>
-#include <cstdio>
-#include <sstream>
-#include <mutex>
 
 using string_view = std::string_view;
 
-template<typename K, typename V>
+template <typename K, typename V>
 using unordered_map = std::unordered_map<K, V>;
 
 using string = std::string;
@@ -24,10 +24,7 @@ using stringstream = std::stringstream;
 class json_storage
 {
 public:
-	json_storage(string_view data_dir)
-		: mPath(data_dir)
-	{
-	}
+	json_storage(string_view data_dir) : mPath(data_dir) {}
 
 	string_view get(string_view key, string_view default_value)
 	{
@@ -86,7 +83,8 @@ private:
 
 		// Try to write the new content
 		FILE* fp = fopen(path.c_str(), "wb");
-		if (fp == nullptr) throw std::runtime_error("could not open resource on disk");
+		if (fp == nullptr)
+			throw std::runtime_error("could not open resource on disk");
 		fwrite(new_data.c_str(), new_data.length(), 1, fp);
 		fclose(fp);
 
@@ -99,10 +97,12 @@ private:
 	{
 		std::lock_guard l(mMutex);
 		auto it = mCache.find(key);
-		if (it != mCache.end()) return string_view(it->second);
+		if (it != mCache.end())
+			return string_view(it->second);
 
 		FILE* fp = fopen(path.c_str(), "rb");
-		if (fp == nullptr) return default_value;
+		if (fp == nullptr)
+			return default_value;
 
 		// Figure out the file size
 		fseek(fp, 0, SEEK_END);
@@ -110,7 +110,8 @@ private:
 		fseek(fp, 0, SEEK_SET);
 
 		// Larger than 4 mb?
-		if (length > 4096 * 1024) throw std::runtime_error("file is too large");
+		if (length > 4096 * 1024)
+			throw std::runtime_error("file is too large");
 
 		// Read the data from the HDD
 		string data;
@@ -132,11 +133,16 @@ private:
 		for (int i = 1; i < size; ++i)
 		{
 			const auto c = relative_path[i];
-			if (c >= 'a' && c <= 'z') result << c;
-			else if (c >= 'A' && c <= 'Z') result << c;
-			else if (c >= '0' && c <= '9') result << c;
-			else if (c == '_') result << c;
-			else result << "+";
+			if (c >= 'a' && c <= 'z')
+				result << c;
+			else if (c >= 'A' && c <= 'Z')
+				result << c;
+			else if (c >= '0' && c <= '9')
+				result << c;
+			else if (c == '_')
+				result << c;
+			else
+				result << "+";
 		}
 		result << ".json";
 		return result.str();
@@ -144,7 +150,8 @@ private:
 
 	[[nodiscard]] string secure_path(string_view relative_path) const
 	{
-		if (relative_path.empty() || relative_path[0] != '/') throw std::runtime_error("invalid path");
+		if (relative_path.empty() || relative_path[0] != '/')
+			throw std::runtime_error("invalid path");
 		return mPath + normalize_path(relative_path);
 	}
 
@@ -204,7 +211,7 @@ void on_request(hiw_request* const req, hiw_response* const resp)
 		if (hiw_string_cmp(req->method, hiw_string_const("DELETE")))
 		{
 			const auto removed_data = storage->remove(uri);
-			if(removed_data.empty())
+			if (removed_data.empty())
 			{
 				log_warnf("could not find %.*s", req->uri.length, req->uri.begin);
 				hiw_response_set_status_code(resp, 404);

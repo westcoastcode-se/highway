@@ -19,10 +19,8 @@ static const int cache_content_capacity = 64;
 
 bool static_cache_add(static_cache* cache, const hiw_file* file)
 {
-	log_infof("Caching path: '%.*s', filename: '%.*s', suffix: '%.*s'",
-		file->path.length, file->path.begin,
-		file->filename.length, file->filename.begin,
-		file->suffix.length, file->suffix.begin);
+	log_infof("Caching path: '%.*s', filename: '%.*s', suffix: '%.*s'", file->path.length, file->path.begin,
+			  file->filename.length, file->filename.begin, file->suffix.length, file->suffix.begin);
 
 	// Copy the filename into the memory buffer
 	const int filename_length = (int)file->path.length - cache->base_dir.length;
@@ -56,8 +54,8 @@ bool static_cache_add(static_cache* cache, const hiw_file* file)
 
 	if (cache->content_count % cache_content_capacity == 0)
 	{
-		static_content* const newmem = realloc(cache->content,
-		                                       sizeof(static_content) * (cache->content_count + cache_content_capacity));
+		static_content* const newmem =
+			realloc(cache->content, sizeof(static_content) * (cache->content_count + cache_content_capacity));
 		if (newmem == NULL)
 		{
 			log_error("out of memory");
@@ -68,11 +66,10 @@ bool static_cache_add(static_cache* cache, const hiw_file* file)
 
 	// put the result in the cache
 	cache->content[cache->content_count++] = (static_content){
-			.uri = (hiw_string){.begin = filename_copy, .length = filename_length},
-			.mime_type = hiw_mimetype_from_filename(
-					(hiw_string){.begin = filename_copy, .length = filename_length}),
-			.memory = buf,
-			.length = size,
+		.uri = (hiw_string){.begin = filename_copy, .length = filename_length},
+		.mime_type = hiw_mimetype_from_filename((hiw_string){.begin = filename_copy, .length = filename_length}),
+		.memory = buf,
+		.length = size,
 	};
 
 	log_infof("cached '%s' as '%.*s'", file->path.begin, filename_length, filename_copy);
@@ -111,6 +108,7 @@ bool static_cache_init(static_cache* cache, hiw_string base_dir)
 
 void static_cache_release(static_cache* cache)
 {
-	if (cache->content) free(cache->content);
+	if (cache->content)
+		free(cache->content);
 	hiw_memory_release(&cache->memory);
 }

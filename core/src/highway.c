@@ -42,7 +42,8 @@ void hiw_release()
 	// todo release thread memory
 
 #if defined(_WIN32) || defined(WIN32)
-	if (hiw_internal_config()->initialize_sockets) {
+	if (hiw_internal_config()->initialize_sockets)
+	{
 		WSACleanup();
 	}
 #else

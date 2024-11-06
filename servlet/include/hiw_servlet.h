@@ -30,11 +30,11 @@ extern "C" {
  */
 struct HIW_PUBLIC hiw_header
 {
-    // The header name
-    hiw_string name;
+	// The header name
+	hiw_string name;
 
-    // The header value
-    hiw_string value;
+	// The header value
+	hiw_string value;
 };
 
 typedef struct hiw_header hiw_header;
@@ -44,11 +44,11 @@ typedef struct hiw_header hiw_header;
  */
 struct HIW_PUBLIC hiw_headers
 {
-    // memory for all headers
-    hiw_header headers[HIW_MAX_HEADERS_COUNT];
+	// memory for all headers
+	hiw_header headers[HIW_MAX_HEADERS_COUNT];
 
-    // number of headers
-    int count;
+	// number of headers
+	int count;
 };
 
 typedef struct hiw_headers hiw_headers;
@@ -58,17 +58,17 @@ typedef struct hiw_headers hiw_headers;
  */
 struct HIW_PUBLIC hiw_request
 {
-    // The request method
-    hiw_string method;
+	// The request method
+	hiw_string method;
 
-    // The request uri
-    hiw_string uri;
+	// The request uri
+	hiw_string uri;
 
-    // Headers sent from the client
-    hiw_headers headers;
+	// Headers sent from the client
+	hiw_headers headers;
 
-    // content_length received from the client
-    int content_length;
+	// content_length received from the client
+	int content_length;
 };
 
 typedef struct hiw_request hiw_request;
@@ -78,8 +78,8 @@ typedef struct hiw_request hiw_request;
  */
 struct HIW_PUBLIC hiw_response
 {
-    // Headers to be sent to the server
-    hiw_headers headers;
+	// Headers to be sent to the server
+	hiw_headers headers;
 };
 
 typedef struct hiw_response hiw_response;
@@ -93,11 +93,11 @@ HIW_PUBLIC typedef void (*hiw_filter_fn)(hiw_request*, hiw_response*, const hiw_
  */
 struct HIW_PUBLIC hiw_filter
 {
-    // The function
-    hiw_filter_fn func;
+	// The function
+	hiw_filter_fn func;
 
-    // User-data associated with this filter
-    void* data;
+	// User-data associated with this filter
+	void* data;
 };
 
 typedef struct hiw_filter hiw_filter;
@@ -107,7 +107,7 @@ typedef struct hiw_filter hiw_filter;
  */
 struct HIW_PUBLIC hiw_filter_chain
 {
-    const hiw_filter* filters;
+	const hiw_filter* filters;
 };
 
 /**
@@ -115,11 +115,11 @@ struct HIW_PUBLIC hiw_filter_chain
  */
 struct HIW_PUBLIC hiw_servlet_config
 {
-    // number of threads
-    int num_threads;
+	// number of threads
+	int num_threads;
 
-    // Generic global user-data
-    void* userdata;
+	// Generic global user-data
+	void* userdata;
 };
 
 typedef struct hiw_servlet_config hiw_servlet_config;
@@ -128,7 +128,8 @@ typedef struct hiw_servlet_config hiw_servlet_config;
 #define HIW_SERVLET_DEFAULT_NUM_THREADS (8)
 
 // default configuration
-#define hiw_servlet_config_default (hiw_servlet_config) { .num_threads = HIW_SERVLET_DEFAULT_NUM_THREADS, .userdata = NULL }
+#define hiw_servlet_config_default                                                                                     \
+	(hiw_servlet_config) { .num_threads = HIW_SERVLET_DEFAULT_NUM_THREADS, .userdata = NULL }
 
 typedef struct hiw_servlet_thread hiw_servlet_thread;
 
@@ -143,27 +144,27 @@ typedef void (*hiw_servlet_fn)(hiw_request*, hiw_response*);
  */
 struct HIW_PUBLIC hiw_servlet
 {
-    // The filter chain used by all servlet threads
-    hiw_filter_chain filter_chain;
+	// The filter chain used by all servlet threads
+	hiw_filter_chain filter_chain;
 
-    // The servlet function to be called when all filters have passed
-    hiw_servlet_fn servlet_func;
+	// The servlet function to be called when all filters have passed
+	hiw_servlet_fn servlet_func;
 
-    // Config
-    hiw_servlet_config config;
+	// Config
+	hiw_servlet_config config;
 
-    // The start function. Note that you are expected to call
-    // hiw_servlet_thread_start(thread)
-    hiw_servlet_start_fn start_func;
+	// The start function. Note that you are expected to call
+	// hiw_servlet_thread_start(thread)
+	hiw_servlet_start_fn start_func;
 
-    // A linked-list of threads
-    struct hiw_servlet_thread* threads;
+	// A linked-list of threads
+	struct hiw_servlet_thread* threads;
 
-    // The underlying server socket
-    hiw_server* server;
+	// The underlying server socket
+	hiw_server* server;
 
-    // Flags associated with the servlet
-    int flags;
+	// Flags associated with the servlet
+	int flags;
 };
 
 typedef struct hiw_servlet hiw_servlet;
@@ -176,29 +177,29 @@ typedef struct hiw_servlet hiw_servlet;
  */
 struct HIW_PUBLIC hiw_servlet_thread
 {
-    // The servlet
-    hiw_servlet* servlet;
+	// The servlet
+	hiw_servlet* servlet;
 
-    // The thread this servlet
-    hiw_thread* thread;
+	// The thread this servlet
+	hiw_thread* thread;
 
-    // The filter chain used in this servlet thread
-    hiw_filter_chain filter_chain;
+	// The filter chain used in this servlet thread
+	hiw_filter_chain filter_chain;
 
-    // The next thread
-    hiw_servlet_thread* next;
+	// The next thread
+	hiw_servlet_thread* next;
 };
 
 enum HIW_PUBLIC hiw_servlet_error
 {
-    // No error
-    HIW_SERVLET_ERROR_NO_ERROR = 0,
+	// No error
+	HIW_SERVLET_ERROR_NO_ERROR = 0,
 
-    // No servlet
-    HIW_SERVLET_ERROR_NULL,
+	// No servlet
+	HIW_SERVLET_ERROR_NULL,
 
-    // out of memory
-    HIW_SERVLET_ERROR_OUT_OF_MEMORY,
+	// out of memory
+	HIW_SERVLET_ERROR_OUT_OF_MEMORY,
 };
 
 typedef enum hiw_servlet_error hiw_servlet_error;
@@ -321,7 +322,8 @@ HIW_PUBLIC extern bool hiw_response_write_header(hiw_response* resp, hiw_header 
  * @param n The number of bytes to send
  * @return true if writing the response body data was successful
  *
- * Please note that this will forcefully send all headers. If those are invalid, then the connection will forcefully close
+ * Please note that this will forcefully send all headers. If those are invalid, then the connection will forcefully
+ * close
  */
 HIW_PUBLIC extern bool hiw_response_write_body_raw(hiw_response* resp, const char* src, int n);
 
@@ -361,4 +363,4 @@ HIW_PUBLIC extern bool hiw_response_set_status_code(hiw_response* resp, int stat
 }
 #endif
 
-#endif //HIW_SERVLET_H
+#endif // HIW_SERVLET_H

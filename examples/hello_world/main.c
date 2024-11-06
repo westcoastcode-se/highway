@@ -50,10 +50,7 @@ int main()
 		hiw_server_start(server);
 
 		// Initialize the filter chain
-		const hiw_filter filters[] = {
-				{ .func = hello_world_filter, NULL },
-				{ 0, 0 }
-		};
+		const hiw_filter filters[] = {{.func = hello_world_filter, NULL}, {0, 0}};
 
 		// Initialize the servlet
 		hiw_servlet servlet = {};

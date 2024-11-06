@@ -9,18 +9,21 @@
 
 bool hiw_file_ignored(const char* filename, int len)
 {
-	if (len > 2) return false;
-	if (len > 1) return *filename == '.' && *(filename + 1) == '.';
-	if (len == 1) return *filename == '.';
+	if (len > 2)
+		return false;
+	if (len > 1)
+		return *filename == '.' && *(filename + 1) == '.';
+	if (len == 1)
+		return *filename == '.';
 	return false;
 }
 
 #if defined(HIW_WINDOWS)
-#	include <windows.h>
-#	define HIW_MAX_PATH MAX_PATH
+#include <windows.h>
+#define HIW_MAX_PATH MAX_PATH
 
-hiw_file_traverse_error hiw_file_traverse1(hiw_string root_path, hiw_file_callback_fn func, void* userdata,
-                                           char* path, char* path0)
+hiw_file_traverse_error hiw_file_traverse1(hiw_string root_path, hiw_file_callback_fn func, void* userdata, char* path,
+										   char* path0)
 {
 	WIN32_FIND_DATA ffd;
 	HANDLE handle;
@@ -54,7 +57,8 @@ hiw_file_traverse_error hiw_file_traverse1(hiw_string root_path, hiw_file_callba
 
 		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
-			if (hiw_file_ignored(ffd.cFileName, len)) continue;
+			if (hiw_file_ignored(ffd.cFileName, len))
+				continue;
 			const hiw_string file_path = {.begin = root_path.begin, .length = (int)(path2 - root_path.begin)};
 			const hiw_file_traverse_error err = hiw_file_traverse1(file_path, func, userdata, path, path2);
 			if (err != HIW_FILE_TRAVERSE_ERROR_SUCCESS)
@@ -69,9 +73,9 @@ hiw_file_traverse_error hiw_file_traverse1(hiw_string root_path, hiw_file_callba
 			const hiw_string filename = {.begin = path2 - len, .length = len};
 			const hiw_string suffix = hiw_string_suffix(filename, '.');
 			const hiw_file file = {
-					.path = file_path,
-					.filename = filename,
-					.suffix = suffix,
+				.path = file_path,
+				.filename = filename,
+				.suffix = suffix,
 			};
 			if (!func(&file, userdata))
 			{
@@ -79,7 +83,8 @@ hiw_file_traverse_error hiw_file_traverse1(hiw_string root_path, hiw_file_callba
 				return HIW_FILE_TRAVERSE_ERROR_ABORTED;
 			}
 		}
-	} while (FindNextFile(handle, &ffd));
+	}
+	while (FindNextFile(handle, &ffd));
 
 	FindClose(handle);
 	return HIW_FILE_TRAVERSE_ERROR_SUCCESS;
@@ -121,7 +126,8 @@ hiw_file_traverse_error hiw_file_traverse(hiw_string root_path, hiw_file_callbac
 
 		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
-			if (hiw_file_ignored(ffd.cFileName, len)) continue;
+			if (hiw_file_ignored(ffd.cFileName, len))
+				continue;
 			const hiw_string file_path = {.begin = path, .length = (int)(path2 - path)};
 			const hiw_file_traverse_error err = hiw_file_traverse1(file_path, func, userdata, path, path2);
 			if (err != HIW_FILE_TRAVERSE_ERROR_SUCCESS)
@@ -136,9 +142,9 @@ hiw_file_traverse_error hiw_file_traverse(hiw_string root_path, hiw_file_callbac
 			const hiw_string filename = {.begin = path2 - len, .length = len};
 			const hiw_string suffix = hiw_string_suffix(filename, '.');
 			const hiw_file file = {
-					.path = file_path,
-					.filename = filename,
-					.suffix = suffix,
+				.path = file_path,
+				.filename = filename,
+				.suffix = suffix,
 			};
 			if (!func(&file, userdata))
 			{
@@ -146,24 +152,25 @@ hiw_file_traverse_error hiw_file_traverse(hiw_string root_path, hiw_file_callbac
 				return HIW_FILE_TRAVERSE_ERROR_ABORTED;
 			}
 		}
-	} while (FindNextFile(handle, &ffd));
+	}
+	while (FindNextFile(handle, &ffd));
 
 	FindClose(handle);
 	return HIW_FILE_TRAVERSE_ERROR_SUCCESS;
 }
 #else
-#	include <unistd.h>
-#	include <sys/types.h>
-#	include <dirent.h>
-#	include <stdio.h>
-#	include <string.h>
-#	define HIW_MAX_PATH 1024
+#include <unistd.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <stdio.h>
+#include <string.h>
+#define HIW_MAX_PATH 1024
 
-hiw_file_traverse_error hiw_file_traverse1(hiw_string root_path, hiw_file_callback_fn func, void* userdata,
-                                           char* path, char* path0)
+hiw_file_traverse_error hiw_file_traverse1(hiw_string root_path, hiw_file_callback_fn func, void* userdata, char* path,
+										   char* path0)
 {
-	DIR *dir;
-	struct dirent *entry;
+	DIR* dir;
+	struct dirent* entry;
 
 	log_debugf("scanning '%.*s'", root_path.length, root_path.begin);
 	char* const path1 = hiw_std_copy("/", 1, path0, HIW_MAX_PATH - (int)(path0 - path));
@@ -191,7 +198,8 @@ hiw_file_traverse_error hiw_file_traverse1(hiw_string root_path, hiw_file_callba
 
 		if (entry->d_type == DT_DIR)
 		{
-			if (hiw_file_ignored(entry->d_name, len)) continue;
+			if (hiw_file_ignored(entry->d_name, len))
+				continue;
 			const hiw_string file_path = {.begin = root_path.begin, .length = (int)(path2 - root_path.begin)};
 			const hiw_file_traverse_error err = hiw_file_traverse1(file_path, func, userdata, path, path2);
 			if (err != HIW_FILE_TRAVERSE_ERROR_SUCCESS)
@@ -206,9 +214,9 @@ hiw_file_traverse_error hiw_file_traverse1(hiw_string root_path, hiw_file_callba
 			const hiw_string filename = {.begin = path2 - len, .length = len};
 			const hiw_string suffix = hiw_string_suffix(filename, '.');
 			const hiw_file file = {
-					.path = file_path,
-					.filename = filename,
-					.suffix = suffix,
+				.path = file_path,
+				.filename = filename,
+				.suffix = suffix,
 			};
 			if (!func(&file, userdata))
 			{
@@ -225,8 +233,8 @@ hiw_file_traverse_error hiw_file_traverse1(hiw_string root_path, hiw_file_callba
 
 hiw_file_traverse_error hiw_file_traverse(hiw_string root_path, hiw_file_callback_fn func, void* userdata)
 {
-	DIR *dir;
-	struct dirent *entry;
+	DIR* dir;
+	struct dirent* entry;
 
 	log_debugf("scanning '%.*s'", root_path.length, root_path.begin);
 	char path[HIW_MAX_PATH];
@@ -256,7 +264,8 @@ hiw_file_traverse_error hiw_file_traverse(hiw_string root_path, hiw_file_callbac
 
 		if (entry->d_type == DT_DIR)
 		{
-			if (hiw_file_ignored(entry->d_name, len)) continue;
+			if (hiw_file_ignored(entry->d_name, len))
+				continue;
 			const hiw_string file_path = {.begin = path, .length = (int)(path2 - path)};
 			const hiw_file_traverse_error err = hiw_file_traverse1(file_path, func, userdata, path, path2);
 			if (err != HIW_FILE_TRAVERSE_ERROR_SUCCESS)
@@ -271,9 +280,9 @@ hiw_file_traverse_error hiw_file_traverse(hiw_string root_path, hiw_file_callbac
 			const hiw_string filename = {.begin = path2 - len, .length = len};
 			const hiw_string suffix = hiw_string_suffix(filename, '.');
 			const hiw_file file = {
-					.path = file_path,
-					.filename = filename,
-					.suffix = suffix,
+				.path = file_path,
+				.filename = filename,
+				.suffix = suffix,
 			};
 			if (!func(&file, userdata))
 			{

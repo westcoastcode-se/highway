@@ -34,7 +34,7 @@ struct HIW_PUBLIC hiw_thread_context
 typedef struct hiw_thread_context hiw_thread_context;
 
 // a function definition for a highway thread
-HIW_PUBLIC typedef void (* hiw_thread_fn)(struct hiw_thread*);
+HIW_PUBLIC typedef void (*hiw_thread_fn)(struct hiw_thread*);
 
 /**
  * Represents a thread managed by highway
@@ -146,4 +146,4 @@ HIW_PUBLIC void hiw_thread_delete(hiw_thread* t);
 }
 #endif
 
-#endif //HIW_THREAD_H
+#endif // HIW_THREAD_H

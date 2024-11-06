@@ -31,7 +31,7 @@ hiw_socket_error hiw_socket_set_timeout(SOCKET sock, unsigned int read_timeout, 
 	struct timeval tv;
 
 	tv.tv_sec = read_timeout / 1000;
-	tv.tv_usec = (read_timeout%1000) * 1000;
+	tv.tv_usec = (read_timeout % 1000) * 1000;
 	int result = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 	if (result < 0)
 	{
@@ -40,7 +40,7 @@ hiw_socket_error hiw_socket_set_timeout(SOCKET sock, unsigned int read_timeout, 
 	}
 
 	tv.tv_sec = write_timeout / 1000;
-	tv.tv_usec = (write_timeout%1000) * 1000;
+	tv.tv_usec = (write_timeout % 1000) * 1000;
 	result = setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 	if (result < 0)
 	{
@@ -96,7 +96,7 @@ int hiw_socket_send(SOCKET s, const char* dest, int len)
 bool hiw_internal_server_bind_ipv4(SOCKET sock, unsigned short port)
 {
 	// bind socket to address and port
-	struct sockaddr_in addr = { 0 };
+	struct sockaddr_in addr = {0};
 	// TODO: allow for binding a specific IP only
 	addr.sin_addr.s_addr = INADDR_ANY;
 	addr.sin_port = htons(port);
@@ -114,7 +114,7 @@ bool hiw_internal_server_bind_ipv4(SOCKET sock, unsigned short port)
 bool hiw_internal_server_bind_ipv6(SOCKET sock, unsigned short port)
 {
 	// bind socket to address and port
-	struct sockaddr_in6 addr = { 0 };
+	struct sockaddr_in6 addr = {0};
 	// TODO: allow for binding a specific IP only
 	addr.sin6_addr = in6addr_any;
 	addr.sin6_port = htons(port);

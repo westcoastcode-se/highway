@@ -13,17 +13,17 @@
  */
 typedef struct static_content
 {
-    // the URI this content is associated with
-    hiw_string uri;
+	// the URI this content is associated with
+	hiw_string uri;
 
-    // the mime type of the file
-    hiw_string mime_type;
+	// the mime type of the file
+	hiw_string mime_type;
 
-    // memory where the content is located
-    const char* memory;
+	// memory where the content is located
+	const char* memory;
 
-    // the length of the memory
-    int length;
+	// the length of the memory
+	int length;
 } static_content;
 
 /**
@@ -31,24 +31,24 @@ typedef struct static_content
  */
 typedef struct static_cache
 {
-    // the base data dir
-    hiw_string base_dir;
+	// the base data dir
+	hiw_string base_dir;
 
-    // memory for cached content, including their filenames
-    hiw_memory memory;
+	// memory for cached content, including their filenames
+	hiw_memory memory;
 
-    // the actuasl content
-    static_content* content;
+	// the actuasl content
+	static_content* content;
 
-    // how much content there is
-    int content_count;
+	// how much content there is
+	int content_count;
 } static_cache;
 
 /**
  * @brief Initialize the static cache
- * @param cache 
- * @param base_dir 
- * @return 
+ * @param cache
+ * @param base_dir
+ * @return
  */
 extern bool static_cache_init(static_cache* cache, hiw_string base_dir);
 

@@ -14,17 +14,17 @@ extern "C" {
 
 struct HIW_PUBLIC hiw_mimetypes_s
 {
-    const hiw_string text_css;
-    const hiw_string text_html;
-    const hiw_string text_javascript;
-    const hiw_string text_plain;
+	const hiw_string text_css;
+	const hiw_string text_html;
+	const hiw_string text_javascript;
+	const hiw_string text_plain;
 
-    const hiw_string image_jpeg;
-    const hiw_string image_png;
+	const hiw_string image_jpeg;
+	const hiw_string image_png;
 
-    const hiw_string application_json;
+	const hiw_string application_json;
 
-    const hiw_string application_octet_stream;
+	const hiw_string application_octet_stream;
 };
 typedef struct hiw_mimetypes_s hiw_mimetypes_s;
 
@@ -51,4 +51,4 @@ HIW_PUBLIC extern hiw_string hiw_mimetype_from_suffix(hiw_string suffix);
 }
 #endif
 
-#endif//HIW_MIMETYPES_H
+#endif // HIW_MIMETYPES_H

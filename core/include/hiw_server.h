@@ -15,39 +15,40 @@ extern "C" {
 
 struct HIW_PUBLIC hiw_server_config
 {
-    // underlying server socket config
-    hiw_socket_config socket_config;
+	// underlying server socket config
+	hiw_socket_config socket_config;
 };
 
 typedef struct hiw_server_config hiw_server_config;
 
 // Default configuration for a highway server
-#define hiw_server_config_default (hiw_server_config) { .socket_config = hiw_socket_config_default }
+#define hiw_server_config_default                                                                                      \
+	(hiw_server_config) { .socket_config = hiw_socket_config_default }
 
 /**
  * Server instance
  */
 struct HIW_PUBLIC hiw_server
 {
-    // Configuration
-    hiw_server_config config;
+	// Configuration
+	hiw_server_config config;
 };
 
 typedef struct hiw_server hiw_server;
 
 enum HIW_PUBLIC hiw_server_error
 {
-    // Everything is fine!
-    HIW_SERVER_ERROR_NO_ERROR = 0,
+	// Everything is fine!
+	HIW_SERVER_ERROR_NO_ERROR = 0,
 
-    // Memory error, most likely because missing server memory
-    HIW_SERVER_ERROR_MEMORY,
+	// Memory error, most likely because missing server memory
+	HIW_SERVER_ERROR_MEMORY,
 
-    // Error raised if the server is running when it's expected not to
-    HIW_SERVER_ERROR_RUNNING,
+	// Error raised if the server is running when it's expected not to
+	HIW_SERVER_ERROR_RUNNING,
 
-    // underlying socket error
-    HIW_SERVER_ERROR_SOCKET,
+	// underlying socket error
+	HIW_SERVER_ERROR_SOCKET,
 };
 
 typedef enum hiw_server_error hiw_server_error;
@@ -57,16 +58,16 @@ typedef enum hiw_server_error hiw_server_error;
  */
 struct HIW_PUBLIC hiw_client
 {
-    // will be non-zero if an error has occurred
-    int error;
+	// will be non-zero if an error has occurred
+	int error;
 };
 
 typedef struct hiw_client hiw_client;
 
- /**
-  * @return true if the supplied error is considered an actual error
-  */
- HIW_PUBLIC extern bool hiw_server_is_error(hiw_server_error err);
+/**
+ * @return true if the supplied error is considered an actual error
+ */
+HIW_PUBLIC extern bool hiw_server_is_error(hiw_server_error err);
 
 /**
  * @return A new instance of a highway server
@@ -156,4 +157,4 @@ HIW_PUBLIC extern int hiw_client_sendall(hiw_client* c, const char* src, int len
 }
 #endif
 
-#endif //hiw_SERVER_H
+#endif // hiw_SERVER_H

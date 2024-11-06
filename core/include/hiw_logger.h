@@ -14,11 +14,11 @@ extern "C" {
 #endif
 
 #ifndef NDEBUG
-#	define log_debugf(format, ...) fprintf(stdout, "DEBUG: " format "\n", __VA_ARGS__)
-#	define log_debug(format) fprintf(stdout, "DEBUG: " format "\n")
+#define log_debugf(format, ...) fprintf(stdout, "DEBUG: " format "\n", __VA_ARGS__)
+#define log_debug(format) fprintf(stdout, "DEBUG: " format "\n")
 #else
-#	define log_debugf(format, ...)
-#	define log_debug(format)
+#define log_debugf(format, ...)
+#define log_debug(format)
 #endif
 
 // Log a message with arguments
@@ -49,4 +49,4 @@ extern "C" {
 }
 #endif
 
-#endif //hiw_LOGGER_H
+#endif // hiw_LOGGER_H

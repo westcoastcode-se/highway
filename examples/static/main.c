@@ -48,7 +48,7 @@ void serve_cached_content(hiw_request* req, hiw_response* resp)
 int start(hiw_string data_dir, int num_threads, int read_timeout, int write_timeout)
 {
 	log_infof("starting static content server from '%.*s' with num_threads=%d, read_timeout=%d, write_timeout=%d",
-		data_dir.length, data_dir.begin, num_threads, read_timeout, write_timeout);
+			  data_dir.length, data_dir.begin, num_threads, read_timeout, write_timeout);
 
 	if (!static_cache_init(&cache, data_dir))
 	{
@@ -56,7 +56,8 @@ int start(hiw_string data_dir, int num_threads, int read_timeout, int write_time
 		return 1;
 	}
 
-	if (!hiw_init(hiw_init_config_default)) return 0;
+	if (!hiw_init(hiw_init_config_default))
+		return 0;
 
 	// start the server
 	hiw_server_config server_config = hiw_server_config_default;
@@ -80,7 +81,7 @@ int start(hiw_string data_dir, int num_threads, int read_timeout, int write_time
 	// Release servlet resources
 	hiw_servlet_release(&servlet);
 
-	// Server ownership is given to the servlet. It will be responsible for 
+	// Server ownership is given to the servlet. It will be responsible for
 	// cleaning upp it's memory
 	server = NULL;
 

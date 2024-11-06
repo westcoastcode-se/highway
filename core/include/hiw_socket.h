@@ -10,25 +10,25 @@
 
 #if defined(HIW_WINDOWS)
 
-#	include <winsock2.h>
-#	include <windows.h>
-#	include <ws2ipdef.h>
-#	include <ws2tcpip.h>
+#include <winsock2.h>
+#include <windows.h>
+#include <ws2ipdef.h>
+#include <ws2tcpip.h>
 
-#	define hiw_socket_close(s) closesocket(s)
+#define hiw_socket_close(s) closesocket(s)
 #else
 
-#   include <arpa/inet.h>
-#   include <netinet/in.h>
-#   include <sys/types.h>
-#   include <sys/fcntl.h>
-#   include <unistd.h>
-#   include <sys/socket.h>
-#   include <netdb.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/fcntl.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#	define hiw_socket_close(s) close(s)
-#   define SOCKET int
-#   define INVALID_SOCKET -1
+#define hiw_socket_close(s) close(s)
+#define SOCKET int
+#define INVALID_SOCKET -1
 #endif
 
 #ifdef __cplusplus
@@ -49,36 +49,41 @@ extern "C" {
 
 typedef enum hiw_socket_ip_version
 {
-    // Allow only IPv4 connections
-    HIW_SOCKET_IPV4,
+	// Allow only IPv4 connections
+	HIW_SOCKET_IPV4,
 
-    // Allow only IPv6 connections
-    HIW_SOCKET_IPV6,
+	// Allow only IPv6 connections
+	HIW_SOCKET_IPV6,
 
-    // Allow both IPv4 and 6 connections. This is the default value
-    HIW_SOCKET_IPV4_AND_6,
+	// Allow both IPv4 and 6 connections. This is the default value
+	HIW_SOCKET_IPV4_AND_6,
 } hiw_socket_ip_version;
 
 // configuration for socket
 struct HIW_PUBLIC hiw_socket_config
 {
-    // The port
-    unsigned short port;
+	// The port
+	unsigned short port;
 
-    // timeout used when reading data over a socket
-    unsigned int read_timeout;
+	// timeout used when reading data over a socket
+	unsigned int read_timeout;
 
-    // timeout used when writing data over a socket
-    unsigned int write_timeout;
+	// timeout used when writing data over a socket
+	unsigned int write_timeout;
 
-    // what ip version is allowed
-    hiw_socket_ip_version ip_version;
+	// what ip version is allowed
+	hiw_socket_ip_version ip_version;
 };
 
 typedef struct hiw_socket_config hiw_socket_config;
 
 // default configuration
-#define hiw_socket_config_default (hiw_socket_config) { .port = HIW_SOCKET_DEFAULT_PORT, .read_timeout = HIW_SOCKET_DEFAULT_READ_TIMEOUT, .write_timeout = HIW_SOCKET_DEFAULT_WRITE_TIMEOUT, .ip_version = HIW_SOCKET_IPV4_AND_6 }
+#define hiw_socket_config_default                                                                                      \
+	(hiw_socket_config)                                                                                                \
+	{                                                                                                                  \
+		.port = HIW_SOCKET_DEFAULT_PORT, .read_timeout = HIW_SOCKET_DEFAULT_READ_TIMEOUT,                              \
+		.write_timeout = HIW_SOCKET_DEFAULT_WRITE_TIMEOUT, .ip_version = HIW_SOCKET_IPV4_AND_6                         \
+	}
 
 /**
  * Receive all bytes from the supplied socket. Limit the number of bytes to the supplied length
@@ -112,24 +117,24 @@ HIW_PUBLIC int hiw_socket_send(SOCKET s, const char* dest, int len);
 
 enum HIW_PUBLIC hiw_socket_error
 {
-    // No error happened
-    hiw_SOCKET_ERROR_NO_ERROR = 0,
+	// No error happened
+	hiw_SOCKET_ERROR_NO_ERROR = 0,
 
-    // Could not create the socket. Maybe the system is out of memory?
-    hiw_SOCKET_ERROR_CREATE,
+	// Could not create the socket. Maybe the system is out of memory?
+	hiw_SOCKET_ERROR_CREATE,
 
-    // Could not configure socket with properties, such as timeout
-    hiw_SOCKET_ERROR_CONFIG,
+	// Could not configure socket with properties, such as timeout
+	hiw_SOCKET_ERROR_CONFIG,
 
-    // Could not bind socket to address and port. Maybe some other process
-    // is using it?
-    hiw_SOCKET_ERROR_BIND,
+	// Could not bind socket to address and port. Maybe some other process
+	// is using it?
+	hiw_SOCKET_ERROR_BIND,
 
-    // Could not listen for incoming connections
-    hiw_SOCKET_ERROR_LISTEN,
+	// Could not listen for incoming connections
+	hiw_SOCKET_ERROR_LISTEN,
 
-    // Could not accept incoming socket request
-    hiw_SOCKET_ERROR_ACCEPT
+	// Could not accept incoming socket request
+	hiw_SOCKET_ERROR_ACCEPT
 };
 
 typedef enum hiw_socket_error hiw_socket_error;
@@ -157,4 +162,4 @@ HIW_PUBLIC SOCKET hiw_socket_accept(SOCKET server_socket, const hiw_socket_confi
 }
 #endif
 
-#endif //hiw_SOCKET_H
+#endif // hiw_SOCKET_H

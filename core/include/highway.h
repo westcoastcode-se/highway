@@ -33,7 +33,8 @@ struct HIW_PUBLIC hiw_init_config
 typedef struct hiw_init_config hiw_init_config;
 
 // default configuration
-#define hiw_init_config_default (hiw_init_config) { .initialize_sockets = true, .initialize_threads = true }
+#define hiw_init_config_default                                                                                        \
+	(hiw_init_config) { .initialize_sockets = true, .initialize_threads = true }
 
 /**
  * @brief Initialize the wcc http framework
@@ -50,4 +51,4 @@ HIW_PUBLIC extern void hiw_release();
 }
 #endif
 
-#endif //HIGHWAY_H
+#endif // HIGHWAY_H
