@@ -73,7 +73,7 @@ A tiny static content server. Exposes on http://127.0.0.1:8080
 
 ```bash
 docker build -f examples/static/Dockerfile -t westcoastcode-se/highway/examples_static:latest .
-docker run --rm -it -p 8080:8080 -v ${pwd}/examples/static/data:/data westcoastcode-se/highway/examples_static:latest
+docker run --rm -it -p 8080:8080 -v $(pwd)/examples/static/data:/data westcoastcode-se/highway/examples_static:latest
 ```
 
 ### Usage

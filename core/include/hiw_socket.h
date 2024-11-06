@@ -25,6 +25,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <netinet/tcp.h>
 
 #define hiw_socket_close(s) close(s)
 #define SOCKET int
@@ -124,7 +125,7 @@ enum HIW_PUBLIC hiw_socket_error
 	hiw_SOCKET_ERROR_CREATE,
 
 	// Could not configure socket with properties, such as timeout
-	hiw_SOCKET_ERROR_CONFIG,
+	HIW_SOCKET_ERROR_CONFIG,
 
 	// Could not bind socket to address and port. Maybe some other process
 	// is using it?

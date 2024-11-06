@@ -36,7 +36,7 @@ hiw_socket_error hiw_socket_set_timeout(SOCKET sock, unsigned int read_timeout, 
 	if (result < 0)
 	{
 		log_errorf("could not configure client socket: error(%d)", result);
-		return hiw_SOCKET_ERROR_CONFIG;
+		return HIW_SOCKET_ERROR_CONFIG;
 	}
 
 	tv.tv_sec = write_timeout / 1000;
@@ -45,7 +45,7 @@ hiw_socket_error hiw_socket_set_timeout(SOCKET sock, unsigned int read_timeout, 
 	if (result < 0)
 	{
 		log_errorf("could not configure client socket: error(%d)", result);
-		return hiw_SOCKET_ERROR_CONFIG;
+		return HIW_SOCKET_ERROR_CONFIG;
 	}
 #endif
 
@@ -151,7 +151,7 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 	{
 		hiw_socket_close(sock);
 		log_errorf("could not configure socket: error(%d)", result);
-		*err = hiw_SOCKET_ERROR_CONFIG;
+		*err = HIW_SOCKET_ERROR_CONFIG;
 		return INVALID_SOCKET;
 	}
 #endif
@@ -165,7 +165,7 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 		{
 			hiw_socket_close(sock);
 			log_errorf("could not configure socket: error(%d)", result);
-			*err = hiw_SOCKET_ERROR_CONFIG;
+			*err = HIW_SOCKET_ERROR_CONFIG;
 			return INVALID_SOCKET;
 		}
 	}
@@ -177,10 +177,23 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 	{
 		hiw_socket_close(sock);
 		log_errorf("could not configure socket: error(%d)", result);
-		*err = hiw_SOCKET_ERROR_CONFIG;
+		*err = HIW_SOCKET_ERROR_CONFIG;
 		return INVALID_SOCKET;
 	}
 #endif
+
+#ifdef TCP_NODELAY
+	opt = 1;
+	result = setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char*)&opt, sizeof(opt));
+	if (result < 0)
+	{
+		hiw_socket_close(sock);
+		log_errorf("could not configure socket: error(%d)", result);
+		*err = HIW_SOCKET_ERROR_CONFIG;
+		return INVALID_SOCKET;
+	}
+#endif
+
 	*err = hiw_socket_set_timeout(sock, config->read_timeout, config->write_timeout);
 	if (*err != hiw_SOCKET_ERROR_NO_ERROR)
 	{
