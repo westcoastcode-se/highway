@@ -14,44 +14,42 @@
 #include <unordered_map>
 
 using string_view = std::string_view;
-
-template <typename K, typename V>
-using unordered_map = std::unordered_map<K, V>;
-
 using string = std::string;
 using stringstream = std::stringstream;
+
+using namespace std::literals;
+
+struct string_hash
+{
+	using hash_type = std::hash<std::string_view>;
+	using is_transparent = void;
+
+	std::size_t operator()(const char* str) const { return hash_type{}(str); }
+	std::size_t operator()(const string_view str) const { return hash_type{}(str); }
+	std::size_t operator()(string const& str) const { return hash_type{}(str); }
+};
+
+typedef std::unordered_map<string, string, string_hash, std::equal_to<>> string_map;
 
 class json_storage
 {
 public:
 	json_storage(string_view data_dir) : mPath(data_dir) {}
 
-	string_view get(string_view key, string_view default_value)
-	{
-		const auto path = secure_path(key);
-		return get_view(string(key), default_value, std::move(path));
-	}
+	string_view get(const string_view key, const string_view default_value) { return get_view(key, default_value); }
 
-	string add(string_view key, string new_data)
-	{
-		const auto path = secure_path(key);
-		return add_view(string(key), std::move(new_data), std::move(path));
-	}
+	string add(const string_view key, string new_data) { return add_view(key, std::move(new_data)); }
 
-	string remove(string_view key)
-	{
-		const auto path = secure_path(key);
-		return remove_view(string(key), std::move(path));
-	}
+	string remove(const string_view key) { return remove_view(key); }
 
 private:
-	string remove_view(string key, string path)
+	string remove_view(const string_view key)
 	{
+		const auto path = secure_path(key);
 		string old_value;
 
 		std::lock_guard l(mMutex);
-		auto it = mCache.find(key);
-		if (it != mCache.end())
+		if (const auto it = mCache.find(key); it != mCache.end())
 		{
 			old_value = std::move(it->second);
 			mCache.erase(it);
@@ -69,13 +67,13 @@ private:
 		return old_value;
 	}
 
-	string add_view(string key, string new_data, string path)
+	string add_view(const string_view key, string new_data)
 	{
+		const auto path = secure_path(key);
 		string old_value;
 
 		std::lock_guard l(mMutex);
-		auto it = mCache.find(key);
-		if (it != mCache.end())
+		if (const auto it = mCache.find(key); it != mCache.end())
 		{
 			old_value = std::move(it->second);
 			mCache.erase(it);
@@ -89,12 +87,14 @@ private:
 		fclose(fp);
 
 		// Save the new content
-		mCache[key] = std::move(new_data);
+		mCache.emplace(key, std::move(old_value));
 		return old_value;
 	}
 
-	string_view get_view(string key, string_view default_value, string path)
+	string_view get_view(const string_view key, const string_view default_value)
 	{
+		const auto path = secure_path(key);
+
 		std::lock_guard l(mMutex);
 		auto it = mCache.find(key);
 		if (it != mCache.end())
@@ -116,10 +116,10 @@ private:
 		// Read the data from the HDD
 		string data;
 		data.resize(length);
-		fread((char*)data.c_str(), length, 1, fp);
+		fread(const_cast<char*>(data.c_str()), length, 1, fp);
 		fclose(fp);
 
-		mCache[key] = std::move(data);
+		mCache.emplace(key, std::move(data));
 		it = mCache.find(key);
 		return string_view(it->second);
 	}
@@ -155,9 +155,9 @@ private:
 		return mPath + normalize_path(relative_path);
 	}
 
-	std::string mPath;
+	string mPath;
 	std::mutex mMutex;
-	unordered_map<string, string> mCache;
+	string_map mCache;
 };
 
 void on_request(hiw_request* const req, hiw_response* const resp)
