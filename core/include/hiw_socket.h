@@ -63,6 +63,9 @@ typedef enum hiw_socket_ip_version
 // configuration for socket
 struct HIW_PUBLIC hiw_socket_config
 {
+	// listen address
+	hiw_string address;
+
 	// The port
 	unsigned short port;
 
@@ -82,7 +85,7 @@ typedef struct hiw_socket_config hiw_socket_config;
 #define hiw_socket_config_default                                                                                      \
 	(hiw_socket_config)                                                                                                \
 	{                                                                                                                  \
-		.port = HIW_SOCKET_DEFAULT_PORT, .read_timeout = HIW_SOCKET_DEFAULT_READ_TIMEOUT,                              \
+		.address = {NULL, 0}, .port = HIW_SOCKET_DEFAULT_PORT, .read_timeout = HIW_SOCKET_DEFAULT_READ_TIMEOUT,        \
 		.write_timeout = HIW_SOCKET_DEFAULT_WRITE_TIMEOUT, .ip_version = HIW_SOCKET_IPV4_AND_6                         \
 	}
 
