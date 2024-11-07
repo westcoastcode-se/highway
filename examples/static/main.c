@@ -16,7 +16,7 @@ hiw_server* server;
 // static cache
 static_cache cache;
 
-void stop_server_on_signal(int)
+void stop_server_on_signal(int ignored)
 {
 	if (server != NULL && hiw_server_is_running(server))
 	{

@@ -70,7 +70,7 @@ hiw_server_error hiw_server_start(hiw_server* s)
 	// Start listen for incoming requests using the configuration
 	hiw_socket_error err;
 	impl->socket = hiw_socket_listen(&s->config.socket_config, &err);
-	if (err != hiw_SOCKET_ERROR_NO_ERROR)
+	if (err != HIW_SOCKET_ERROR_NO_ERROR)
 	{
 		log_error("failed to start highway server");
 		return HIW_SERVER_ERROR_SOCKET;
@@ -158,7 +158,7 @@ hiw_client* hiw_server_accept(hiw_server* s)
 	}
 
 	log_debugf("server(%p) accepting a new client", s);
-	hiw_socket_error err = hiw_SOCKET_ERROR_NO_ERROR;
+	hiw_socket_error err = HIW_SOCKET_ERROR_NO_ERROR;
 	const SOCKET client_socket = hiw_socket_accept(impl->socket, &impl->pub.config.socket_config, &err);
 	if (client_socket == INVALID_SOCKET)
 	{

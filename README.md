@@ -42,6 +42,8 @@ that can be used to build REST applications.
   - Could be useful adding `detach` support for this, in case of slow IO
 - [ ] Library: Expose multiple server ports, for example a management port for health
 - [ ] Library: Serving files from the disk used for static html content
+- [ ] Build: Allow for embedding static content directly in the binary
+- [ ] Library: Reverse proxy support
 - [ ] ...
 
 # Examples

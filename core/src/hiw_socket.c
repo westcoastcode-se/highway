@@ -17,7 +17,7 @@ hiw_socket_error hiw_socket_set_timeout(SOCKET sock, unsigned int read_timeout, 
 	if (result < 0)
 	{
 		log_errorf("could not configure client socket: error(%d)", result);
-		return hiw_SOCKET_ERROR_CONFIG;
+		return HIW_SOCKET_ERROR_CONFIG;
 	}
 
 	value = write_timeout;
@@ -25,7 +25,7 @@ hiw_socket_error hiw_socket_set_timeout(SOCKET sock, unsigned int read_timeout, 
 	if (result < 0)
 	{
 		log_errorf("could not configure client socket: error(%d)", result);
-		return hiw_SOCKET_ERROR_CONFIG;
+		return HIW_SOCKET_ERROR_CONFIG;
 	}
 #else
 	struct timeval tv;
@@ -50,7 +50,7 @@ hiw_socket_error hiw_socket_set_timeout(SOCKET sock, unsigned int read_timeout, 
 #endif
 
 	log_debug("timeout configured");
-	return hiw_SOCKET_ERROR_NO_ERROR;
+	return HIW_SOCKET_ERROR_NO_ERROR;
 }
 
 int hiw_socket_recv_all(SOCKET s, char* dest, const int len)
@@ -195,7 +195,7 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 #endif
 
 	*err = hiw_socket_set_timeout(sock, config->read_timeout, config->write_timeout);
-	if (*err != hiw_SOCKET_ERROR_NO_ERROR)
+	if (*err != HIW_SOCKET_ERROR_NO_ERROR)
 	{
 		hiw_socket_close(sock);
 		return INVALID_SOCKET;
@@ -231,7 +231,7 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 		return INVALID_SOCKET;
 	}
 
-	*err = hiw_SOCKET_ERROR_NO_ERROR;
+	*err = HIW_SOCKET_ERROR_NO_ERROR;
 	return sock;
 }
 
@@ -265,7 +265,7 @@ SOCKET hiw_socket_accept(SOCKET server_socket, const hiw_socket_config* config, 
 	}
 
 	*err = hiw_socket_set_timeout(sock, config->read_timeout, config->write_timeout);
-	if (*err != hiw_SOCKET_ERROR_NO_ERROR)
+	if (*err != HIW_SOCKET_ERROR_NO_ERROR)
 	{
 		hiw_socket_close(sock);
 		return INVALID_SOCKET;

@@ -119,7 +119,7 @@ HIW_PUBLIC int hiw_socket_send(SOCKET s, const char* dest, int len);
 enum HIW_PUBLIC hiw_socket_error
 {
 	// No error happened
-	hiw_SOCKET_ERROR_NO_ERROR = 0,
+	HIW_SOCKET_ERROR_NO_ERROR = 0,
 
 	// Could not create the socket. Maybe the system is out of memory?
 	hiw_SOCKET_ERROR_CREATE,
