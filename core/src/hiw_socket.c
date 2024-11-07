@@ -194,6 +194,20 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 	}
 #endif
 
+#ifdef SO_LINGER
+	struct linger l_opt;
+	l_opt.l_onoff = 0;
+	l_opt.l_linger = 0;
+	result = setsockopt(sock, SOL_SOCKET, SO_LINGER, (const char*)&l_opt, sizeof(l_opt));
+	if (result < 0)
+	{
+		hiw_socket_close(sock);
+		log_errorf("could not configure socket: error(%d)", result);
+		*err = HIW_SOCKET_ERROR_CONFIG;
+		return INVALID_SOCKET;
+	}
+#endif
+
 	*err = hiw_socket_set_timeout(sock, config->read_timeout, config->write_timeout);
 	if (*err != HIW_SOCKET_ERROR_NO_ERROR)
 	{
