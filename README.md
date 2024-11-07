@@ -15,6 +15,7 @@ that can be used to build REST applications.
 - [x] Support for servlet function
 - [x] Library: Easier way to use the framework using Highway Boot
 - [x] Build: Preliminary Docker support
+- [x] Library: Serving files from the disk used for static html content
 
 **Not implemented**
 
@@ -41,7 +42,6 @@ that can be used to build REST applications.
 - [ ] Library: Add a Highway client implementation: `hiw_http_client`
   - Could be useful adding `detach` support for this, in case of slow IO
 - [ ] Library: Expose multiple server ports, for example a management port for health
-- [ ] Library: Serving files from the disk used for static html content
 - [ ] Build: Allow for embedding static content directly in the binary
 - [ ] Library: Reverse proxy support
 - [ ] ...
