@@ -53,7 +53,7 @@ hiw_socket_error hiw_socket_set_timeout(SOCKET sock, unsigned int read_timeout, 
 	return HIW_SOCKET_ERROR_NO_ERROR;
 }
 
-int hiw_socket_recv_all(SOCKET s, char* dest, const int len)
+int hiw_socket_recv_all(const SOCKET s, char* dest, const int len)
 {
 	assert(dest != NULL && "expected 'dest' to exist");
 	if (dest == NULL)
@@ -73,7 +73,7 @@ int hiw_socket_recv_all(SOCKET s, char* dest, const int len)
 	return len;
 }
 
-int hiw_socket_recv(SOCKET s, char* dest, int len)
+int hiw_socket_recv(const SOCKET s, char* dest, int len)
 {
 	assert(dest != NULL && "expected 'dest' to exist");
 	if (dest == NULL)
@@ -83,7 +83,7 @@ int hiw_socket_recv(SOCKET s, char* dest, int len)
 	return recv(s, dest, len, 0);
 }
 
-int hiw_socket_send(SOCKET s, const char* dest, int len)
+int hiw_socket_send(const SOCKET s, const char* dest, int len)
 {
 	assert(dest != NULL && "expected 'dest' to exist");
 	if (dest == NULL)
@@ -93,16 +93,32 @@ int hiw_socket_send(SOCKET s, const char* dest, int len)
 	return send(s, dest, len, 0);
 }
 
-bool hiw_internal_server_bind_ipv4(SOCKET sock, unsigned short port)
+bool hiw_internal_server_bind_ipv4(const SOCKET sock, const hiw_socket_config* const config)
 {
+	int result = 0;
 	// bind socket to address and port
-	struct sockaddr_in addr = {0};
-	// TODO: allow for binding a specific IP only
-	addr.sin_addr.s_addr = INADDR_ANY;
-	addr.sin_port = htons(port);
+	struct sockaddr_in addr;
+	addr.sin_port = htons(config->port);
 	addr.sin_family = AF_INET;
+	if (config->address.length == 0)
+		addr.sin_addr.s_addr = INADDR_ANY;
+	else
+	{
+		struct in_addr inaddr;
 
-	const int result = bind(sock, (struct sockaddr*)&addr, sizeof(addr));
+		char tmp[INET_ADDRSTRLEN];
+		*hiw_std_copy(config->address.begin, config->address.length, tmp, INET_ADDRSTRLEN) = 0;
+		result = inet_pton(AF_INET, tmp, &inaddr);
+		if (result != 1)
+		{
+			log_errorf("could not bind address '%.*s' socket: error(%d)", config->address.length, config->address.begin,
+					   result);
+			return false;
+		}
+		addr.sin_addr = inaddr;
+	}
+
+	result = bind(sock, (struct sockaddr*)&addr, sizeof(addr));
 	if (result < 0)
 	{
 		log_errorf("could not bind socket: error(%d)", result);
@@ -111,13 +127,13 @@ bool hiw_internal_server_bind_ipv4(SOCKET sock, unsigned short port)
 	return true;
 }
 
-bool hiw_internal_server_bind_ipv6(SOCKET sock, unsigned short port)
+bool hiw_internal_server_bind_ipv6(const SOCKET sock, const hiw_socket_config* const config)
 {
 	// bind socket to address and port
 	struct sockaddr_in6 addr = {0};
 	// TODO: allow for binding a specific IP only
 	addr.sin6_addr = in6addr_any;
-	addr.sin6_port = htons(port);
+	addr.sin6_port = htons(config->port);
 	addr.sin6_family = AF_INET6;
 
 	const int result = bind(sock, (struct sockaddr*)&addr, sizeof(addr));
@@ -131,8 +147,12 @@ bool hiw_internal_server_bind_ipv6(SOCKET sock, unsigned short port)
 
 SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 {
+	int af = AF_INET;
+	if (config->ip_version != HIW_SOCKET_IPV4)
+		af = AF_INET6;
+
 	// create socket
-	const SOCKET sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+	const SOCKET sock = socket(af, SOCK_STREAM, IPPROTO_TCP);
 	if (sock == INVALID_SOCKET)
 	{
 		log_error("could not create server socket");
@@ -218,7 +238,7 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 	switch (config->ip_version)
 	{
 	case HIW_SOCKET_IPV4:
-		if (!hiw_internal_server_bind_ipv4(sock, config->port))
+		if (!hiw_internal_server_bind_ipv4(sock, config))
 		{
 			hiw_socket_close(sock);
 			*err = hiw_SOCKET_ERROR_BIND;
@@ -227,7 +247,7 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 		break;
 	case HIW_SOCKET_IPV4_AND_6:
 	case HIW_SOCKET_IPV6:
-		if (!hiw_internal_server_bind_ipv6(sock, config->port))
+		if (!hiw_internal_server_bind_ipv6(sock, config))
 		{
 			hiw_socket_close(sock);
 			*err = hiw_SOCKET_ERROR_BIND;
