@@ -6,7 +6,7 @@ ADD . /usr/src
 # Build the source code
 RUN set -ex; \
     cd /usr/src; \
-    cmake .;  \
+    cmake . -DCMAKE_BUILD_TYPE=Release;  \
     cmake --build . --config Release --target examples_hello_world
 
 # Copy example to it's own image
