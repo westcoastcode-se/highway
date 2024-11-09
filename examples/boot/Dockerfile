@@ -7,13 +7,16 @@ ADD . /usr/src
 RUN set -ex; \
     cd /usr/src; \
     cmake .;  \
-    cmake --build . --config Release --target examples_jc
+    cmake --build . --config Release --target examples_boot
 
 # Copy example to it's own image
-FROM alpine:latest
+FROM scratch
 
 # Exposse the port and set volume
 EXPOSE 8080
-VOLUME /data
-COPY --from=builder /usr/src/examples_jc /examples_jc
-ENTRYPOINT ["/examples_jc"]
+
+# Copy files
+COPY --from=builder /usr/src/examples_boot /examples_boot
+
+# Start with /data folder
+ENTRYPOINT ["/examples_boot"]

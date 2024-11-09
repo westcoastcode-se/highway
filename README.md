@@ -54,6 +54,12 @@ You can start by clone the entire source code:
 git clone https://github.com/westcoastcode-se/highway.git
 ```
 
+Then build the `builder` image:
+
+```bash
+docker build -f examples/Builder.dockerfile -t westcoastcode-se/highway/builder:latest .
+```
+
 Then follow the examples below
 
 ## (hello_world) Hello World
@@ -90,6 +96,13 @@ Usage: static [data-dir] [max-threads] [read-timeout] [write-timeout]
 
 A tiny rest server using Highway Boot. Exposes on http://127.0.0.1:8080
 
+### Build
+
+```bash
+docker build -f examples/boot/Dockerfile -t westcoastcode-se/highway/examples_boot:latest .
+docker run --rm -it -p 8080:8080 westcoastcode-se/highway/examples_boot:latest
+```
+
 ## ([jc](examples/jc/main.c)) Json Cache
 
 A json cache server using Highway Boot. Exposes on http://127.0.0.1:8080
@@ -104,7 +117,7 @@ It will allow any form of URL, but the path will be transformed by changing all 
 
 ```bash
 docker build -f examples/jc/Dockerfile -t westcoastcode-se/highway/examples_jc:latest .
-docker run --rm -it -p 8080:8080 -v ${pwd}/examples/jc/data:/data westcoastcode-se/highway/examples_jc:latest
+docker run --rm -it -p 8080:8080 -v $(pwd)/examples/jc/data:/data westcoastcode-se/highway/examples_jc:latest
 ```
 
 ### Usage

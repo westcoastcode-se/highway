@@ -59,8 +59,7 @@ add_library(highway
         "core/src/hiw_mimetypes.c"
 )
 target_include_directories(highway PUBLIC core/include)
-target_link_libraries(highway PRIVATE common)
-target_link_libraries(highway PRIVATE ${SOCKET_LIBRARIES})
+target_link_libraries(highway PRIVATE common ${SOCKET_LIBRARIES})
 
 #
 # Highway Servlet
@@ -71,8 +70,7 @@ add_library(highway_servlet
 )
 target_include_directories(highway_servlet PUBLIC core/include)
 target_include_directories(highway_servlet PUBLIC servlet/include)
-target_link_libraries(highway_servlet PRIVATE common highway)
-target_link_libraries(highway_servlet PRIVATE ${SOCKET_LIBRARIES})
+target_link_libraries(highway_servlet PRIVATE common highway ${SOCKET_LIBRARIES})
 
 #
 # Highway Boot
@@ -83,8 +81,7 @@ add_library(highway_boot
 target_include_directories(highway_boot PUBLIC core/include)
 target_include_directories(highway_boot PUBLIC servlet/include)
 target_include_directories(highway_boot PUBLIC boot/include)
-target_link_libraries(highway_boot PRIVATE common highway highway_servlet)
-target_link_libraries(highway_boot PRIVATE ${SOCKET_LIBRARIES})
+target_link_libraries(highway_boot PRIVATE common highway highway_servlet statically_link ${SOCKET_LIBRARIES})
 
 #
 # Hello World Executable
