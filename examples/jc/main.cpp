@@ -124,7 +124,7 @@ private:
 		return string_view(it->second);
 	}
 
-	[[nodiscard]] static string normalize_path(string_view relative_path)
+	[[nodiscard]] static string normalize_path(const string_view relative_path)
 	{
 		// Assume that we've verified the path to the resource (i.e. length > 0 and first character is "/")
 		stringstream result;
@@ -148,7 +148,7 @@ private:
 		return result.str();
 	}
 
-	[[nodiscard]] string secure_path(string_view relative_path) const
+	[[nodiscard]] string secure_path(const string_view relative_path) const
 	{
 		if (relative_path.empty() || relative_path[0] != '/')
 			throw std::runtime_error("invalid path");
@@ -238,7 +238,23 @@ void on_request(hiw_request* const req, hiw_response* const resp)
 
 void hiw_boot_init(hiw_boot_config* config)
 {
-	json_storage storage("data");
+	string_view data_dir("data");
+	if (config->argc > 1)
+	{
+		if (hiw_string_cmpc(hiw_string_const("--help"), config->argv[1], (int)strlen(config->argv[1])))
+		{
+			fprintf(stdout, "Usage: jc [data-dir]\n");
+			fprintf(stdout, "\n");
+			fprintf(stdout,
+					"\tdata-dir - is the path to the data directory where the json data is saved. Default: 'data'\n");
+			fprintf(stdout, "\n");
+			return;
+		}
+
+		data_dir = string_view(config->argv[1], (int)strlen(config->argv[1]));
+	}
+
+	json_storage storage(data_dir);
 
 	// Configure the Highway Boot Framework
 	config->servlet_func = on_request;
