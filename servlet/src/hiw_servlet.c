@@ -404,7 +404,7 @@ bool hiw_internal_request_parse_status_line(hiw_internal_request* req, hiw_strin
 	}
 
 	const hiw_string http_version = hiw_string_rtrim(method_path_version[2]);
-	if (!hiw_string_cmpc(http_version, "HTTP/1.1", 8))
+	if (!hiw_str_cmpc(http_version, "HTTP/1.1"))
 	{
 		log_infof("[t:%p][c:%p] received an unsupported HTTP version %.*s", req->thread, req->client,
 				  http_version.length, http_version.begin);
@@ -489,7 +489,8 @@ bool hiw_internal_request_read_headers(hiw_internal_request* req)
 			// verify if we've received too many headers
 			if (req->pub.headers.count > HIW_MAX_HEADERS_COUNT)
 			{
-				log_warnf("[t:%p][c:%p] sending more headers than %d", req->thread, req->client, HIW_MAX_HEADERS_COUNT);
+				log_warnf("[t:%p][c:%p] received more headers than %d", req->thread, req->client,
+						  HIW_MAX_HEADERS_COUNT);
 				return false;
 			}
 
@@ -521,7 +522,7 @@ bool hiw_internal_request_read_headers(hiw_internal_request* req)
 					goto done;
 				}
 
-				log_errorf("[t:%p][c:%p] sent faulty header for string %.*s", req->thread, req->client, line.length,
+				log_errorf("[t:%p][c:%p] received faulty header '%.*s'", req->thread, req->client, line.length,
 						   line.begin);
 				return false;
 			}
@@ -538,14 +539,14 @@ bool hiw_internal_request_read_headers(hiw_internal_request* req)
 			bytes_left = bytes_read - (int)(pos - memory->ptr);
 
 			// is this a connection header?
-			if (hiw_string_cmpc(header->name, "Connection", 10))
+			if (hiw_str_cmpc(header->name, "Connection"))
 			{
-				header_connection_close = hiw_string_cmpc(header->value, "close", 5);
+				header_connection_close = hiw_str_cmpc(header->value, "close");
 				continue;
 			}
 
 			// should we receive content from the client?
-			if (hiw_string_cmpc(header->name, "Content-Length", 14))
+			if (hiw_str_cmpc(header->name, "Content-Length"))
 			{
 				hiw_string_toi(header->value, &req->pub.content_length);
 				header_content_length = req->pub.content_length;

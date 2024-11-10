@@ -325,13 +325,20 @@ HIW_PUBLIC extern char* hiw_std_mempy(const char* src, int n, char* dest, int ca
 HIW_PUBLIC extern char* hiw_std_copy(const char* src, int n, char* dest, int capacity);
 
 /**
- * @brief Compare a hiw_string with a char array
+ * @brief Copy a null-terminated string into the destination buffer
  * @param src A null-terminated string
  * @param dest the destination buffer
  * @param capacity The destination capacity
  * @return A pointer to where the copy stopped
  */
 HIW_PUBLIC extern char* hiw_std_copy0(const char* src, char* dest, int capacity);
+
+/**
+* @brief Compare a highway string with a constant string
+* @param lhs The hiw_string string to compare with
+* @param rhs A constant string
+*/
+#define hiw_str_cmpc(lhs, rhs) hiw_string_cmpc(lhs, rhs, hiw_string_const_len(rhs))
 
 #ifdef __cplusplus
 }
