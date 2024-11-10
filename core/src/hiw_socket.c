@@ -129,9 +129,15 @@ bool hiw_internal_server_bind_ipv4(const SOCKET sock, const hiw_socket_config* c
 
 bool hiw_internal_server_bind_ipv6(const SOCKET sock, const hiw_socket_config* const config)
 {
+	if (config->address.length > 0)
+	{
+		log_errorf("binding server socket to address '%.*s' is not supported yet",
+			config->address.length, config->address.begin);
+		return false;
+	}
+
 	// bind socket to address and port
 	struct sockaddr_in6 addr = {0};
-	// TODO: allow for binding a specific IP only
 	addr.sin6_addr = in6addr_any;
 	addr.sin6_port = htons(config->port);
 	addr.sin6_family = AF_INET6;

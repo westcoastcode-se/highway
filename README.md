@@ -16,6 +16,7 @@ that can be used to build REST applications.
 - [x] Library: Easier way to use the framework using Highway Boot
 - [x] Build: Preliminary Docker support
 - [x] Library: Serving files from the disk used for static html content
+- [x] Security: IPv4 allow for limiting access from a specific network interface using address
 
 **Not implemented**
 
@@ -44,6 +45,7 @@ that can be used to build REST applications.
 - [ ] Library: Expose multiple server ports, for example a management port for health
 - [ ] Build: Allow for embedding static content directly in the binary
 - [ ] Library: Reverse proxy support
+- [ ] Security: IPv6 allow for limiting access from a specific network interface using address
 - [ ] ...
 
 # Examples
