@@ -39,7 +39,7 @@ typedef struct hiw_server hiw_server;
 enum HIW_PUBLIC hiw_server_error
 {
 	// Everything is fine!
-	HIW_SERVER_ERROR_NO_ERROR = 0,
+	HIW_SERVER_ERROR_SUCCESS = 0,
 
 	// Memory error, most likely because missing server memory
 	HIW_SERVER_ERROR_MEMORY,
@@ -70,7 +70,7 @@ typedef struct hiw_client hiw_client;
 HIW_PUBLIC extern bool hiw_server_is_error(hiw_server_error err);
 
 /**
- * @return A new instance of a highway server
+ * @return A stopped highway server
  */
 HIW_PUBLIC extern hiw_server* hiw_server_new(const hiw_server_config* config);
 

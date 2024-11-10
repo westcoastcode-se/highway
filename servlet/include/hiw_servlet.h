@@ -14,16 +14,24 @@ extern "C" {
 #endif
 
 // maximum number of headers allowed by highway
+#if !defined(HIW_MAX_HEADERS_COUNT)
 #define HIW_MAX_HEADERS_COUNT (32)
+#endif
 
 // the max header size for a highway http request (8 kb)
+#if !defined(HIW_MAX_HEADER_SIZE)
 #define HIW_MAX_HEADER_SIZE (8 * 1024)
+#endif
 
 // should the server write out the server header
+#if !defined(HIW_WRITE_SERVER_HEADER)
 #define HIW_WRITE_SERVER_HEADER 1
+#endif
 
 // should the server version be written in the server header
+#if !defined(HIW_WRITE_SERVER_VERSION)
 #define HIW_WRITE_SERVER_VERSION 1
+#endif
 
 /**
  * A highway http header
@@ -157,8 +165,8 @@ struct HIW_PUBLIC hiw_servlet
 	// hiw_servlet_thread_start(thread)
 	hiw_servlet_start_fn start_func;
 
-	// A linked-list of threads
-	struct hiw_servlet_thread* threads;
+	// The first servlet thread in a linked-list of threads
+	hiw_servlet_thread* threads;
 
 	// The underlying server socket
 	hiw_server* server;
@@ -193,7 +201,7 @@ struct HIW_PUBLIC hiw_servlet_thread
 enum HIW_PUBLIC hiw_servlet_error
 {
 	// No error
-	HIW_SERVLET_ERROR_NO_ERROR = 0,
+	HIW_SERVLET_ERROR_SUCCESS = 0,
 
 	// No servlet
 	HIW_SERVLET_ERROR_NULL,
@@ -217,8 +225,8 @@ HIW_PUBLIC extern hiw_servlet* hiw_servlet_new(hiw_server* server);
  * Create a new highway servlet. You can also use hiw_server_init if you already have
  * memory allocated for the server.
  *
- * @param s
- * @param server
+ * @param s The servlet we want to initialize
+ * @param server The server we want to use for accepting incoming connections
  * @return same value as s
  */
 HIW_PUBLIC extern hiw_servlet* hiw_servlet_init(hiw_servlet* s, hiw_server* server);

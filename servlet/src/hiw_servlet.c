@@ -261,6 +261,12 @@ hiw_servlet_thread* hiw_servlet_thread_new()
 	}
 	st->next = NULL;
 	st->thread = hiw_thread_new(hiw_servlet_func);
+	if (st->thread == NULL)
+	{
+		free(st);
+		log_error("out of memory");
+		return NULL;
+	}
 	// attach the servlet_thread as user data so that we have access to it in the actual thread
 	hiw_thread_set_userdata(st->thread, st);
 	return st;
@@ -325,21 +331,21 @@ hiw_servlet_error hiw_servlet_start(hiw_servlet* s)
 		log_infof("hiw_servlet(%p) is starting thread", s);
 		if (!hiw_thread_start(first->thread))
 		{
-			log_errorf("failed to start servlet thread %lld", first->thread->id);
+			log_errorf("hiw_servlet(%p) could not start hiw_thread(%p)", s, first->thread);
 			// TODO: Cleanup memory?!!
 		}
 		first = first->next;
 	}
 	log_infof("hiw_servlet(%p) spawned %d threads", s, s->config.num_threads);
 
-	// Start the main thread servlet
+	// Start the main thread servlet. It blocks in hiw_thread_start until the servlet is shutting down
 	hiw_servlet_thread main_servlet_thread = {
 		.servlet = s, .thread = hiw_thread_main(), .filter_chain = s->filter_chain, .next = NULL};
 	hiw_thread_set_userdata(main_servlet_thread.thread, &main_servlet_thread);
 	hiw_thread_set_func(main_servlet_thread.thread, hiw_servlet_func);
 	hiw_thread_start(main_servlet_thread.thread);
 
-	return HIW_SERVLET_ERROR_NO_ERROR;
+	return HIW_SERVLET_ERROR_SUCCESS;
 }
 
 void hiw_servlet_release(hiw_servlet* s)

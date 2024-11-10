@@ -42,7 +42,7 @@ struct hiw_internal_client
 
 typedef struct hiw_internal_client hiw_internal_client;
 
-bool hiw_server_is_error(hiw_server_error err) { return err != HIW_SERVER_ERROR_NO_ERROR; }
+bool hiw_server_is_error(hiw_server_error err) { return err != HIW_SERVER_ERROR_SUCCESS; }
 
 hiw_server* hiw_server_new(const hiw_server_config* config)
 {
@@ -70,13 +70,13 @@ hiw_server_error hiw_server_start(hiw_server* s)
 	// Start listen for incoming requests using the configuration
 	hiw_socket_error err;
 	impl->socket = hiw_socket_listen(&s->config.socket_config, &err);
-	if (err != HIW_SOCKET_ERROR_NO_ERROR)
+	if (err != HIW_SOCKET_ERROR_SUCCESS)
 	{
 		log_error("failed to start highway server");
 		return HIW_SERVER_ERROR_SOCKET;
 	}
 	impl->running = true;
-	return HIW_SERVER_ERROR_NO_ERROR;
+	return HIW_SERVER_ERROR_SUCCESS;
 }
 
 void* hiw_server_get_userdata(hiw_server* s)
@@ -97,7 +97,7 @@ hiw_server_error hiw_server_set_userdata(hiw_server* s, void* userdata)
 	if (impl->socket != INVALID_SOCKET)
 		return HIW_SERVER_ERROR_RUNNING;
 	impl->userdata = userdata;
-	return HIW_SERVER_ERROR_NO_ERROR;
+	return HIW_SERVER_ERROR_SUCCESS;
 }
 
 void hiw_server_stop(hiw_server* s)
@@ -158,7 +158,7 @@ hiw_client* hiw_server_accept(hiw_server* s)
 	}
 
 	log_debugf("server(%p) accepting a new client", s);
-	hiw_socket_error err = HIW_SOCKET_ERROR_NO_ERROR;
+	hiw_socket_error err = HIW_SOCKET_ERROR_SUCCESS;
 	const SOCKET client_socket = hiw_socket_accept(impl->socket, &impl->pub.config.socket_config, &err);
 	if (client_socket == INVALID_SOCKET)
 	{

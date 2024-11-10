@@ -122,23 +122,23 @@ HIW_PUBLIC int hiw_socket_send(SOCKET s, const char* dest, int len);
 enum HIW_PUBLIC hiw_socket_error
 {
 	// No error happened
-	HIW_SOCKET_ERROR_NO_ERROR = 0,
+	HIW_SOCKET_ERROR_SUCCESS = 0,
 
 	// Could not create the socket. Maybe the system is out of memory?
-	hiw_SOCKET_ERROR_CREATE,
+	HIW_SOCKET_ERROR_CREATE,
 
 	// Could not configure socket with properties, such as timeout
 	HIW_SOCKET_ERROR_CONFIG,
 
 	// Could not bind socket to address and port. Maybe some other process
 	// is using it?
-	hiw_SOCKET_ERROR_BIND,
+	HIW_SOCKET_ERROR_BIND,
 
 	// Could not listen for incoming connections
-	hiw_SOCKET_ERROR_LISTEN,
+	HIW_SOCKET_ERROR_LISTEN,
 
 	// Could not accept incoming socket request
-	hiw_SOCKET_ERROR_ACCEPT
+	HIW_SOCKET_ERROR_ACCEPT
 };
 
 typedef enum hiw_socket_error hiw_socket_error;

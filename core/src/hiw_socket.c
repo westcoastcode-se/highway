@@ -50,7 +50,7 @@ hiw_socket_error hiw_socket_set_timeout(SOCKET sock, unsigned int read_timeout, 
 #endif
 
 	log_debug("timeout configured");
-	return HIW_SOCKET_ERROR_NO_ERROR;
+	return HIW_SOCKET_ERROR_SUCCESS;
 }
 
 int hiw_socket_recv_all(const SOCKET s, char* dest, const int len)
@@ -162,7 +162,7 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 	if (sock == INVALID_SOCKET)
 	{
 		log_error("could not create server socket");
-		*err = hiw_SOCKET_ERROR_CREATE;
+		*err = HIW_SOCKET_ERROR_CREATE;
 		return INVALID_SOCKET;
 	}
 
@@ -235,7 +235,7 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 #endif
 
 	*err = hiw_socket_set_timeout(sock, config->read_timeout, config->write_timeout);
-	if (*err != HIW_SOCKET_ERROR_NO_ERROR)
+	if (*err != HIW_SOCKET_ERROR_SUCCESS)
 	{
 		hiw_socket_close(sock);
 		return INVALID_SOCKET;
@@ -247,7 +247,7 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 		if (!hiw_internal_server_bind_ipv4(sock, config))
 		{
 			hiw_socket_close(sock);
-			*err = hiw_SOCKET_ERROR_BIND;
+			*err = HIW_SOCKET_ERROR_BIND;
 			return INVALID_SOCKET;
 		}
 		break;
@@ -256,7 +256,7 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 		if (!hiw_internal_server_bind_ipv6(sock, config))
 		{
 			hiw_socket_close(sock);
-			*err = hiw_SOCKET_ERROR_BIND;
+			*err = HIW_SOCKET_ERROR_BIND;
 			return INVALID_SOCKET;
 		}
 		break;
@@ -267,11 +267,11 @@ SOCKET hiw_socket_listen(const hiw_socket_config* config, hiw_socket_error* err)
 	{
 		hiw_socket_close(sock);
 		log_errorf("could not listen for incoming requests: error(%d)", result);
-		*err = hiw_SOCKET_ERROR_LISTEN;
+		*err = HIW_SOCKET_ERROR_LISTEN;
 		return INVALID_SOCKET;
 	}
 
-	*err = HIW_SOCKET_ERROR_NO_ERROR;
+	*err = HIW_SOCKET_ERROR_SUCCESS;
 	return sock;
 }
 
@@ -287,7 +287,7 @@ SOCKET hiw_socket_accept(SOCKET server_socket, const hiw_socket_config* config, 
 		sock = accept(server_socket, (struct sockaddr*)&addr, &addr_len);
 		if (sock == INVALID_SOCKET)
 		{
-			*err = hiw_SOCKET_ERROR_ACCEPT;
+			*err = HIW_SOCKET_ERROR_ACCEPT;
 			log_info("Failed to accept client socket");
 			return INVALID_SOCKET;
 		}
@@ -298,14 +298,14 @@ SOCKET hiw_socket_accept(SOCKET server_socket, const hiw_socket_config* config, 
 		sock = accept(server_socket, (struct sockaddr*)&addr_v6, &addr_len);
 		if (sock == INVALID_SOCKET)
 		{
-			*err = hiw_SOCKET_ERROR_ACCEPT;
+			*err = HIW_SOCKET_ERROR_ACCEPT;
 			log_info("Failed to accept client socket");
 			return INVALID_SOCKET;
 		}
 	}
 
 	*err = hiw_socket_set_timeout(sock, config->read_timeout, config->write_timeout);
-	if (*err != HIW_SOCKET_ERROR_NO_ERROR)
+	if (*err != HIW_SOCKET_ERROR_SUCCESS)
 	{
 		hiw_socket_close(sock);
 		return INVALID_SOCKET;

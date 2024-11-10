@@ -63,7 +63,7 @@ void hiw_boot_start(const hiw_boot_config* const config)
 	hiw_app_state.server = hiw_server_new(&config->server_config);
 	if (hiw_app_state.server == NULL)
 	{
-		log_error("failed to initialize server");
+		log_error("failed to initialize highway server");
 		return;
 	}
 
@@ -72,7 +72,13 @@ void hiw_boot_start(const hiw_boot_config* const config)
 	hiw_server_set_userdata(hiw_app_state.server, &userdata);
 
 	// Start the server socket
-	hiw_server_start(hiw_app_state.server);
+	if (hiw_server_start(hiw_app_state.server) != HIW_SERVER_ERROR_SUCCESS)
+	{
+		hiw_server_delete(hiw_app_state.server);
+		hiw_app_state.server = NULL;
+		log_error("failed to start highway server");
+		return;
+	}
 
 	// Start the servlet
 	hiw_servlet servlet = {.config = config->servlet_config};

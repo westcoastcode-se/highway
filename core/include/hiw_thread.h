@@ -14,6 +14,11 @@ extern "C" {
 
 #define hiw_thread_flags_main (1 << 0)
 
+// Default timeout for when the thread is waiting for a thread to stop running
+#if !defined(HIW_THREAD_WAIT_DEFAULT_TIMEOUT)
+#define HIW_THREAD_WAIT_DEFAULT_TIMEOUT (30000)
+#endif
+
 /**
  * Context that can be used to recursively supply generic data to a thread
  */
@@ -41,9 +46,6 @@ HIW_PUBLIC typedef void (*hiw_thread_fn)(struct hiw_thread*);
  */
 struct HIW_PUBLIC hiw_thread
 {
-	// unique id
-	size_t id;
-
 	// thread flags
 	int flags;
 
@@ -67,12 +69,13 @@ typedef struct hiw_thread hiw_thread;
 HIW_PUBLIC hiw_thread* hiw_thread_new(hiw_thread_fn fn);
 
 /**
- * Stop the supplied thread and wait until it's shut down
+ * Wait for the thread to stop. This function should be called when the server has stopped
+ * and when the application waits for all servlet threads to stop
  *
- * @param t
- * @param wait_ms
+ * @param t The thread
+ * @param wait_ms How long we're waiting until we forcefully close the thread
  */
-HIW_PUBLIC void hiw_thread_stop_and_wait(hiw_thread* t, int wait_ms);
+HIW_PUBLIC void hiw_thread_wait(hiw_thread* t, int wait_ms);
 
 /**
  * @return The instance that represents the main thread

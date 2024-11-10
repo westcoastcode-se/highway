@@ -10,6 +10,15 @@ set(C_STANDARD_REQUIRED ON)
 option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)" OFF)
 
 #
+# Library defaults
+#
+set(HIW_MAX_HEADER_SIZE 8192 CACHE STRING "The maximum header size allowed")
+set(HIW_MAX_HEADERS_COUNT 32 CACHE STRING "The maximum number of headers parsed on incoming request")
+set(HIW_WRITE_SERVER_HEADER 1 CACHE STRING "Should the library automatically add the server header in the  response header")
+set(HIW_WRITE_SERVER_VERSION 1 CACHE STRING "Should the library automatically add the server version in the response header")
+set(HIW_THREAD_WAIT_DEFAULT_TIMEOUT 30000 CACHE STRING "How long the servlet is waiting for threads on shutdown by default")
+
+#
 # Default Values
 #
 add_library(common INTERFACE)
@@ -21,7 +30,13 @@ if (MSVC)
     if (NOT BUILD_SHARED_LIBS)
         target_compile_options(common INTERFACE /DHIW_HTTP_STATIC_LIB)
     endif ()
-    set (SOCKET_LIBRARIES wsock32 ws2_32)
+    target_compile_options(common INTERFACE /DHIW_MAX_HEADER_SIZE=${HIW_MAX_HEADER_SIZE})
+    target_compile_options(common INTERFACE /DHIW_MAX_HEADERS_COUNT=${HIW_MAX_HEADERS_COUNT})
+    target_compile_options(common INTERFACE /DHIW_WRITE_SERVER_HEADER=${HIW_WRITE_SERVER_HEADER})
+    target_compile_options(common INTERFACE /DHIW_WRITE_SERVER_VERSION=${HIW_WRITE_SERVER_VERSION})
+    target_compile_options(common INTERFACE /DHIW_THREAD_WAIT_DEFAULT_TIMEOUT=${HIW_THREAD_WAIT_DEFAULT_TIMEOUT})
+
+    set(SOCKET_LIBRARIES wsock32 ws2_32)
 else ()
     target_compile_options(common INTERFACE -Wall -Wextra)
     if (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -30,7 +45,12 @@ else ()
     if (NOT BUILD_SHARED_LIBS)
         target_compile_options(common INTERFACE -DHIW_HTTP_STATIC_LIB)
     endif ()
-    set (SOCKET_LIBRARIES)
+    target_compile_options(common INTERFACE -DHIW_MAX_HEADER_SIZE=${HIW_MAX_HEADER_SIZE})
+    target_compile_options(common INTERFACE -DHIW_MAX_HEADERS_COUNT=${HIW_MAX_HEADERS_COUNT})
+    target_compile_options(common INTERFACE -DHIW_WRITE_SERVER_HEADER=${HIW_WRITE_SERVER_HEADER})
+    target_compile_options(common INTERFACE -DHIW_WRITE_SERVER_VERSION=${HIW_WRITE_SERVER_VERSION})
+    target_compile_options(common INTERFACE -DHIW_THREAD_WAIT_DEFAULT_TIMEOUT=${HIW_THREAD_WAIT_DEFAULT_TIMEOUT})
+    set(SOCKET_LIBRARIES)
 endif ()
 
 add_library(statically_link INTERFACE)
