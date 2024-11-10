@@ -634,10 +634,10 @@ bool hiw_response_flush_headers(hiw_internal_response* const resp)
 
 #if HIW_WRITE_SERVER_HEADER == 1
 #if HIW_WRITE_SERVER_VERSION == 1
-	const hiw_string server_header_name = hiw_string_const("server");
+	const hiw_string server_header_name = hiw_string_const("Server");
 	const hiw_string server_header_value = hiw_string_const("Highway " HIGHWAY_VERSION);
 #else
-	const hiw_string server_header_name = hiw_string_const("server" HIGHWAY_VERSION);
+	const hiw_string server_header_name = hiw_string_const("Server" HIGHWAY_VERSION);
 	const hiw_string server_header_value = hiw_string_const("Highway");
 #endif
 	if (!hiw_response_write_header(&resp->pub, (hiw_header){.name = server_header_name, .value = server_header_value}))
@@ -977,7 +977,7 @@ bool hiw_response_write_body_raw(hiw_response* resp, const char* src, int n)
 
 bool hiw_response_set_content_type(hiw_response* const resp, const hiw_string mime_type)
 {
-	const hiw_string content_type_name = hiw_string_const("content-type");
+	const hiw_string content_type_name = hiw_string_const("Content-Type");
 	return hiw_response_write_header(resp, (hiw_header){.name = content_type_name, .value = mime_type});
 }
 
@@ -988,7 +988,7 @@ bool hiw_response_set_content_length(hiw_response* resp, int len)
 	if (hiw_bit_test(impl->flags, hiw_internal_response_flag_content_length_set))
 		return true;
 
-	const hiw_string content_length_name = hiw_string_const("content-length");
+	const hiw_string content_length_name = hiw_string_const("Content-Length");
 	char temp[hiw_string_const_len("2147483647")];
 
 	const int written_bytes = (int)(hiw_std_uitoc(temp, sizeof(temp), len) - temp);
@@ -1009,7 +1009,7 @@ bool hiw_response_set_connection_close(hiw_response* resp, bool close)
 	if (hiw_bit_test(impl->flags, hiw_internal_response_flag_connection_set))
 		return true;
 
-	const hiw_string connection_name = hiw_string_const("connection");
+	const hiw_string connection_name = hiw_string_const("Connection");
 	const hiw_string connection_close_keep_alive = hiw_string_const("keep-alive");
 	const hiw_string connection_close_close = hiw_string_const("close");
 

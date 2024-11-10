@@ -52,7 +52,10 @@ extern "C" {
 #define HIW_LINUX 1
 #endif
 
-#define HIGHWAY_VERSION "0.0.1"
+#define HIGHWAY_MAJOR_VERSION "0"
+#define HIGHWAY_MINOR_VERSION "0"
+#define HIGHWAY_PATCH_VERSION "1"
+#define HIGHWAY_VERSION HIGHWAY_MAJOR_VERSION "." HIGHWAY_MINOR_VERSION "." HIGHWAY_PATCH_VERSION
 
 /**
  * Check if the supplied bits are set in value
