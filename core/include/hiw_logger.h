@@ -45,6 +45,12 @@ extern "C" {
 // that originates from the server or if the error is important enough to be visible
 #define log_error(format) fprintf(stderr, "ERROR: " format "\n")
 
+// Log a panic error and exit the application
+#define log_panic(format) { fprintf(stderr, "PANIC: " format "\n"); abort(); }
+
+// Log an out of memory error in panic and force the application to shut down.
+#define log_out_of_memory() log_panic("out of memory")
+
 #ifdef __cplusplus
 }
 #endif
