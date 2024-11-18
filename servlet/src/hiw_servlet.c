@@ -172,18 +172,13 @@ void hiw_internal_response_reset(hiw_internal_response* resp, hiw_client* client
 	resp->content_bytes_left = 0;
 }
 
-hiw_servlet* hiw_servlet_new(hiw_server* s)
+hiw_servlet* hiw_servlet_new(hiw_server* const server)
 {
-	hiw_servlet* const st = (hiw_servlet*)malloc(sizeof(hiw_servlet));
-	if (st == NULL)
-	{
-		log_error("out of memory");
-		return NULL;
-	}
-	return hiw_servlet_init(st, s);
+	hiw_servlet* const st = hiw_malloc(sizeof(hiw_servlet));
+	return hiw_servlet_init(st, server);
 }
 
-hiw_servlet* hiw_servlet_init(hiw_servlet* s, hiw_server* server)
+hiw_servlet* hiw_servlet_init(hiw_servlet* const s, hiw_server* const server)
 {
 	s->config = hiw_servlet_config_default;
 	s->filter_chain.filters = NULL;
@@ -253,12 +248,7 @@ void hiw_servlet_func(hiw_thread* t)
 
 hiw_servlet_thread* hiw_servlet_thread_new()
 {
-	hiw_servlet_thread* const st = malloc(sizeof(hiw_servlet_thread));
-	if (st == NULL)
-	{
-		log_error("out of memory");
-		return NULL;
-	}
+	hiw_servlet_thread* const st = hiw_malloc(sizeof(hiw_servlet_thread));
 	st->next = NULL;
 	st->thread = hiw_thread_new(hiw_servlet_func);
 	if (st->thread == NULL)
@@ -955,7 +945,8 @@ bool hiw_response_write_body_raw(hiw_response* resp, const char* src, int n)
 	const int sent = hiw_client_sendall(impl->client, src, n);
 	if (sent != n)
 	{
-		log_errorf("[t:%p][c:%p] failed to send all data to the client", impl->thread, impl->client);
+		log_errorf("[t:%p][c:%p] expected to send %d bytes to the client but sent %d", impl->thread, impl->client, n,
+				   sent);
 		return hiw_internal_response_error(impl);
 	}
 

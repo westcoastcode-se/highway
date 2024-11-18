@@ -337,11 +337,20 @@ HIW_PUBLIC extern char* hiw_std_copy(const char* src, int n, char* dest, int cap
 HIW_PUBLIC extern char* hiw_std_copy0(const char* src, char* dest, int capacity);
 
 /**
-* @brief Compare a highway string with a constant string
-* @param lhs The hiw_string string to compare with
-* @param rhs A constant string
-*/
+ * @brief Compare a highway string with a constant string
+ * @param lhs The hiw_string string to compare with
+ * @param rhs A constant string
+ */
 #define hiw_str_cmpc(lhs, rhs) hiw_string_cmpc(lhs, rhs, hiw_string_const_len(rhs))
+
+/**
+ * @brief Allocate memory on the heap
+ * @param size number of bytes
+ * @return A pointer to the memory
+ *
+ * Please note that the application will forcefully shut down in case of out of memory
+ */
+HIW_PUBLIC extern void* hiw_malloc(int size);
 
 #ifdef __cplusplus
 }

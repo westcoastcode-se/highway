@@ -7,12 +7,18 @@
 
 void on_request(hiw_request* const req, hiw_response* const resp)
 {
-	const hiw_string json = hiw_string_const("{\"name\":\"John Doe\"}");
+	if (hiw_string_cmp(req->uri, hiw_string_const("/")))
+	{
+		const hiw_string json = hiw_string_const("{\"name\":\"John Doe\"}");
 
-	hiw_response_set_status_code(resp, 200);
-	hiw_response_set_content_length(resp, json.length);
-	hiw_response_set_content_type(resp, hiw_mimetypes.application_json);
-	hiw_response_write_body_raw(resp, json.begin, json.length);
+		hiw_response_set_status_code(resp, 200);
+		hiw_response_set_content_length(resp, json.length);
+		hiw_response_set_content_type(resp, hiw_mimetypes.application_json);
+		hiw_response_write_body_raw(resp, json.begin, json.length);
+		return;
+	}
+
+	hiw_response_set_status_code(resp, 404);
 }
 
 void hiw_boot_init(hiw_boot_config* config)

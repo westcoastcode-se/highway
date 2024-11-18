@@ -67,12 +67,7 @@ hiw_thread* hiw_thread_new(hiw_thread_fn fn)
 	assert(fn != NULL && "expected 'fn' to exist");
 	if (fn == NULL)
 		return NULL;
-	hiw_internal_thread* const t = (hiw_internal_thread*)malloc(sizeof(hiw_internal_thread));
-	if (t == NULL)
-	{
-		log_error("out of memory");
-		return NULL;
-	}
+	hiw_internal_thread* const t = hiw_malloc(sizeof(hiw_internal_thread));
 	t->pub.flags = 0;
 	t->pub.data = NULL;
 	t->pub.func = fn;

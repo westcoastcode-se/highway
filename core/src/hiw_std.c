@@ -4,6 +4,7 @@
 //
 
 #include "hiw_std.h"
+#include "hiw_logger.h"
 #include <assert.h>
 #include <ctype.h>
 
@@ -283,7 +284,7 @@ bool hiw_memory_dynamic_init(hiw_memory* m, int capacity)
 	if (capacity <= 0)
 		return false;
 
-	m->pos = m->ptr = malloc(capacity);
+	m->pos = m->ptr = hiw_malloc(capacity);
 	if (m->ptr == NULL)
 		return false;
 	m->end = m->pos + capacity;
@@ -378,4 +379,13 @@ char* hiw_std_copy0(const char* src, char* dest, int capacity)
 	for (int i = 0; i < capacity && *src; i++)
 		*dest++ = *src++;
 	return dest;
+}
+
+void* hiw_malloc(int size)
+{
+	void* ret = malloc(size);
+	assert(ret && "out of memory");
+	if (ret == NULL)
+		log_panic("hiw_malloc failed, out of memory");
+	return ret;
 }

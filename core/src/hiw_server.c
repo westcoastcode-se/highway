@@ -46,13 +46,7 @@ bool hiw_server_is_error(hiw_server_error err) { return err != HIW_SERVER_ERROR_
 
 hiw_server* hiw_server_new(const hiw_server_config* config)
 {
-	hiw_internal_server* const impl = (hiw_internal_server*)malloc(sizeof(hiw_internal_server));
-	if (impl == NULL)
-	{
-		log_error("out of memory");
-		return NULL;
-	}
-
+	hiw_internal_server* const impl = hiw_malloc(sizeof(hiw_internal_server));
 	impl->pub.config = *config;
 	impl->userdata = NULL;
 	impl->socket = INVALID_SOCKET;
@@ -166,14 +160,7 @@ hiw_client* hiw_server_accept(hiw_server* s)
 		return NULL;
 	}
 
-	hiw_internal_client* const client = malloc(sizeof(hiw_internal_client));
-	if (client == NULL)
-	{
-		log_error("out of memory");
-		hiw_socket_close(client_socket);
-		return NULL;
-	}
-
+	hiw_internal_client* const client = hiw_malloc(sizeof(hiw_internal_client));
 	client->socket = client_socket;
 	client->ip_version = impl->pub.config.socket_config.ip_version;
 	client->pub.error = 0;
