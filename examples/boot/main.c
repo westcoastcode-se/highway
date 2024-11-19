@@ -9,7 +9,7 @@ void on_request(hiw_request* const req, hiw_response* const resp)
 {
 	if (hiw_string_cmp(req->uri, hiw_string_const("/")))
 	{
-		const hiw_string json = hiw_string_const("{\"name\":\"John Doe\"}");
+		constexpr hiw_string json = hiw_string_const("{\"name\":\"John Doe\"}");
 
 		hiw_response_set_status_code(resp, 200);
 		hiw_response_set_content_length(resp, json.length);

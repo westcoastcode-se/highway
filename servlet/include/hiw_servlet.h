@@ -205,9 +205,6 @@ enum HIW_PUBLIC hiw_servlet_error
 
 	// No servlet
 	HIW_SERVLET_ERROR_NULL,
-
-	// out of memory
-	HIW_SERVLET_ERROR_OUT_OF_MEMORY,
 };
 
 typedef enum hiw_servlet_error hiw_servlet_error;

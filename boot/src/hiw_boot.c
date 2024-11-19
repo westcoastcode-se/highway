@@ -21,23 +21,17 @@ struct hiw_boot_userdata
 };
 
 /**
-* @brief Function called when a new request is received to this server
-* @param req the incoming request
-* @param resp the outgoing response
-*/
-void hiw_boot_on_request(hiw_request* req, hiw_response* resp)
-{
-	hiw_app_state.config.servlet_func(req, resp);
-}
+ * @brief Function called when a new request is received to this server
+ * @param req the incoming request
+ * @param resp the outgoing response
+ */
+void hiw_boot_on_request(hiw_request* req, hiw_response* resp) { hiw_app_state.config.servlet_func(req, resp); }
 
 /**
  * @brief Function called when the servlet thread is starting up
  * @param st The new thread
  */
-void hiw_boot_on_servlet_start(hiw_servlet_thread* st)
-{
-	hiw_app_state.config.servlet_start_func(st);
-}
+void hiw_boot_on_servlet_start(hiw_servlet_thread* st) { hiw_app_state.config.servlet_start_func(st); }
 
 /**
  * @brief Function called when a signal is received from the OS
@@ -51,10 +45,7 @@ void hiw_boot_signal(int sig)
 	}
 }
 
-void hiw_boot_servlet_start_default(hiw_servlet_thread* st)
-{
-	hiw_servlet_start_filter_chain(st);
-}
+void hiw_boot_servlet_start_default(hiw_servlet_thread* st) { hiw_servlet_start_filter_chain(st); }
 
 void hiw_boot_start(const hiw_boot_config* const config)
 {
@@ -94,7 +85,8 @@ void hiw_boot_start(const hiw_boot_config* const config)
 void* hiw_boot_get_userdata()
 {
 	struct hiw_boot_userdata* userdata = hiw_server_get_userdata(hiw_app_state.server);
-	if (userdata == NULL) return NULL;
+	if (userdata == NULL)
+		return NULL;
 	return userdata->userdata;
 }
 
@@ -104,26 +96,23 @@ void* hiw_boot_get_userdata()
 void hiw_boot_pre_start(int argc, char** argv)
 {
 	// load the configuration
-	hiw_app_state = (struct hiw_boot_state){
-			.server = NULL,
-			.config = {
-					.server_config = hiw_server_config_default,
-					.servlet_config = hiw_servlet_config_default,
-					.filters = NULL,
-					.servlet_start_func = hiw_boot_servlet_start_default,
-					.servlet_func = NULL,
-					.userdata = NULL,
-					.argc = argc,
-					.argv = argv
-			}
-	};
+	hiw_app_state = (struct hiw_boot_state){.server = NULL,
+											.config = {.server_config = hiw_server_config_default,
+													   .servlet_config = hiw_servlet_config_default,
+													   .filters = NULL,
+													   .servlet_start_func = hiw_boot_servlet_start_default,
+													   .servlet_func = NULL,
+													   .userdata = NULL,
+													   .argc = argc,
+													   .argv = argv}};
 	hiw_boot_init(&hiw_app_state.config);
 }
 
 int main(int argc, char** argv)
 {
 	signal(SIGINT, hiw_boot_signal);
-	if (!hiw_init(hiw_init_config_default)) return 1;
+	if (!hiw_init(hiw_init_config_default))
+		return 1;
 	hiw_boot_pre_start(argc, argv);
 	hiw_release();
 	return 0;

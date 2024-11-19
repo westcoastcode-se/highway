@@ -117,16 +117,14 @@ void hiw_thread_wait(hiw_thread* t, int wait_ms)
 
 hiw_thread* hiw_thread_main()
 {
-	static hiw_internal_thread main = {
-		.pub.flags = hiw_thread_flags_main,
-		.pub.func = NULL,
-		.pub.context = NULL,
+	static hiw_internal_thread main = {.pub.flags = hiw_thread_flags_main,
+									   .pub.func = NULL,
+									   .pub.context = NULL,
 #if defined(HIW_WINDOWS)
-		.handle = NULL,
+									   .handle = NULL,
 #else
 #endif
-		.started = false
-	};
+									   .started = false};
 	return &main.pub;
 }
 

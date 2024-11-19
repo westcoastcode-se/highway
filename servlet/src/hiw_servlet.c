@@ -262,7 +262,7 @@ hiw_servlet_thread* hiw_servlet_thread_new()
 	return st;
 }
 
-void hiw_servlet_thread_delete(hiw_servlet_thread* st)
+void hiw_servlet_thread_delete(hiw_servlet_thread* const st)
 {
 	log_infof("hiw_servlet_thread(%p) deleting", st);
 	if (st == NULL)
@@ -273,7 +273,7 @@ void hiw_servlet_thread_delete(hiw_servlet_thread* st)
 	free(st);
 }
 
-hiw_servlet_error hiw_servlet_start(hiw_servlet* s)
+hiw_servlet_error hiw_servlet_start(hiw_servlet* const s)
 {
 	assert(s != NULL && "expected 's' to exist");
 	if (s == NULL)
@@ -286,26 +286,13 @@ hiw_servlet_error hiw_servlet_start(hiw_servlet* s)
 	hiw_servlet_thread* last = NULL;
 	for (int i = 0; i < s->config.num_threads; ++i)
 	{
-		hiw_servlet_thread* st = hiw_servlet_thread_new();
-		if (st == NULL)
-		{
-			log_error("out of memory");
-			while (first)
-			{
-				hiw_servlet_thread* const next = first->next;
-				hiw_servlet_thread_delete(first);
-				first = next;
-			}
-			return HIW_SERVLET_ERROR_OUT_OF_MEMORY;
-		}
-
+		hiw_servlet_thread* const st = hiw_servlet_thread_new();
 		st->servlet = s;
 		st->filter_chain = s->filter_chain;
 
 		if (first == NULL)
 		{
-			first = st;
-			last = st;
+			first = last = st;
 		}
 		else
 		{

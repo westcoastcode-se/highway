@@ -64,7 +64,7 @@ typedef struct hiw_thread hiw_thread;
  * Create memory for a new thread
  *
  * @param fn function to be called
- * @return an instance that represents the thread; NULL is out of memory
+ * @return an instance that represents the thread
  */
 HIW_PUBLIC hiw_thread* hiw_thread_new(hiw_thread_fn fn);
 
