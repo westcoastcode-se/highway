@@ -18,6 +18,7 @@
 
 #ifdef __unix__
 #include <pthread.h>
+#include <limits.h>
 #define HIW_THREAD_HANDLE pthread_t
 #elif defined(HIW_WINDOWS)
 #include <process.h>
@@ -42,23 +43,23 @@ bool critical_section_wait(const PCONDITION_VARIABLE cond, const PCRITICAL_SECTI
 #define critical_section_broadcast(cond) WakeAllConditionVariable(cond)
 #else
 #define critical_section_init(mutex) pthread_mutex_init(mutex, NULL)
-#define critical_cond_init(cond) pthread_cond_init(mutex, NULL)
+#define critical_cond_init(cond) pthread_cond_init(cond, NULL)
 #define critical_section_destroy(mutex) pthread_mutex_destroy(mutex)
 #define critical_cond_destroy(cond) pthread_cond_destroy(cond)
 #define critical_section_enter(mutex) pthread_mutex_lock(mutex)
 #define critical_section_exit(mutex) pthread_mutex_unlock(mutex)
+#define INFINITE INT_MAX
 
-bool critical_section_wait(const pthread_cond_t cond, const pthread_mutex_t mutex, const int millis)
+bool critical_section_wait(pthread_cond_t* cond, pthread_mutex_t* mutex, const int millis)
 {
-	struct timeval tv;
+	struct timespec ts;
 	clock_gettime(CLOCK_REALTIME, &ts);
-	tv.tv_sec += read_timeout / 1000;
-	tv.tv_usec += (read_timeout % 1000) * 1000;
-	return pthread_cond_timedwait(cond, mutex, &tv);
+	ts.tv_sec += millis / 1000;
+	ts.tv_nsec += (millis % 1000) * 1000000;
+	return pthread_cond_timedwait(cond, mutex, &ts);
 }
 
-#define critical_section_wait(cond, mutex) pthread_cond_timedwait(cond, mutex, (&))
-#define critical_section_notify(cond) WakeConditionVariable(cond)
+#define critical_section_notify(cond) pthread_cond_signal(cond)
 #define critical_section_broadcast(cond) pthread_cond_broadcast(cond)
 #endif
 
@@ -351,6 +352,7 @@ struct hiw_internal_thread_pool
 	CONDITION_VARIABLE work_cond;
 #else
 	pthread_mutex_t mutex;
+	pthread_cond_t work_cond;
 #endif
 };
 
@@ -425,6 +427,7 @@ void hiw_thread_pool_func(hiw_thread* t)
 		// check if we should do work
 		if (pool->work_next == NULL && pool->running)
 		{
+			// TODO allow for customized timeout
 			critical_section_wait(&pool->work_cond, &pool->mutex, INFINITE);
 		}
 
@@ -516,7 +519,7 @@ void hiw_thread_pool_delete(hiw_thread_pool* pool)
 		worker = next;
 	}
 
-	critical_cond_destroy(impl->work_cond);
+	critical_cond_destroy(&impl->work_cond);
 	critical_section_destroy(&impl->mutex);
 	free(impl);
 }
