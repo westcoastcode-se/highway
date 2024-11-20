@@ -145,28 +145,36 @@ HIW_PUBLIC bool hiw_thread_start(hiw_thread* t);
  */
 HIW_PUBLIC void hiw_thread_delete(hiw_thread* t);
 
-typedef struct hiw_thread_pool hiw_thread_pool;
-
-/**
- * A thread pool executing generic jobs
- */
-struct HIW_PUBLIC hiw_thread_pool
+struct HIW_PUBLIC hiw_thread_pool_config
 {
 	// The number of threads running at this moment
 	int count;
 
 	// The maximum number of threads allowed to run
 	int max_count;
+
+	// allow the thread pool to shrink as load goes down
+	bool allow_shrink;
 };
+typedef struct hiw_thread_pool_config hiw_thread_pool_config;
+
+/**
+ * A thread pool executing generic jobs
+ */
+struct HIW_PUBLIC hiw_thread_pool
+{
+	// thread pool config
+	hiw_thread_pool_config config;
+};
+typedef struct hiw_thread_pool hiw_thread_pool;
 
 /**
  * create a new thread pool instance
  *
- * @param initial_count the initial thread count
- * @param max_count the maximum number of allowed threads
+ * @param config the thread pool config
  * @return a thread pool
  */
-extern HIW_PUBLIC hiw_thread_pool* hiw_thread_pool_new(int initial_count, int max_count);
+extern HIW_PUBLIC hiw_thread_pool* hiw_thread_pool_new(const hiw_thread_pool_config* config);
 
 /**
  * @brief delete the supplied thread pool and destroy all it's internal memory

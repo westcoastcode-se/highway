@@ -373,6 +373,20 @@ void hiw_thread_pool_add_worker(hiw_internal_thread_pool* impl, hiw_internal_thr
 	critical_section_exit(&impl->mutex);
 }
 
+void hiw_thread_pool_work_done(hiw_internal_thread_pool* impl, hiw_internal_thread_work* work)
+{
+	critical_section_enter(&impl->mutex);
+	if (impl->work_free != NULL)
+		work->next = impl->work_free;
+	impl->work_free = work;
+	critical_section_exit(&impl->mutex);
+
+	if (impl->pub.config.allow_shrink)
+	{
+		// TODO: If we have a small amount of load on this pool, then allow shrinking the pool
+	}
+}
+
 hiw_internal_thread_work* hiw_thread_pool_pop_work(hiw_internal_thread_pool* impl)
 {
 	hiw_internal_thread_work* work = impl->work_next;
@@ -426,6 +440,7 @@ void hiw_thread_pool_func(hiw_thread* t)
 		{
 			log_debugf("[t:%p] running work", t);
 			work->func(work->data);
+			hiw_thread_pool_work_done(pool, work);
 		}
 	}
 
@@ -434,11 +449,13 @@ void hiw_thread_pool_func(hiw_thread* t)
 	hiw_thread_context_pop(worker->thread);
 }
 
-hiw_thread_pool* hiw_thread_pool_new(const int initial_count, const int max_count)
+hiw_thread_pool* hiw_thread_pool_new(const hiw_thread_pool_config* config)
 {
+	// TODO add support for shrinking thread pools
+	assert(config->allow_shrink == false && "shrinking the threads are not supported yet");
+
 	hiw_internal_thread_pool* const impl = hiw_malloc(sizeof(hiw_internal_thread_pool));
-	impl->pub.count = initial_count;
-	impl->pub.max_count = max_count;
+	impl->pub.config = *config;
 	impl->worker_first = NULL;
 	impl->worker_last = NULL;
 	impl->work_next = NULL;
@@ -449,7 +466,7 @@ hiw_thread_pool* hiw_thread_pool_new(const int initial_count, const int max_coun
 	critical_section_init(&impl->mutex);
 	critical_cond_init(&impl->work_cond);
 
-	for (int i = 0; i < impl->pub.count; ++i)
+	for (int i = 0; i < impl->pub.config.count; ++i)
 	{
 		hiw_internal_thread_worker* worker = hiw_malloc(sizeof(hiw_internal_thread_worker));
 		worker->pool = impl;
