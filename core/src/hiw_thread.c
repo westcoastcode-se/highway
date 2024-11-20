@@ -442,7 +442,8 @@ void hiw_thread_pool_func(hiw_thread* t)
 		if (work)
 		{
 			log_debugf("[t:%p] running work", t);
-			work->func(work->data);
+			hiw_thread_set_userdata(t, work->data);
+			work->func(t);
 			hiw_thread_pool_work_done(pool, work);
 		}
 	}
@@ -546,15 +547,11 @@ void hiw_thread_pool_push(hiw_thread_pool* pool, hiw_thread_fn func, void* data)
 	// get work memory
 	hiw_internal_thread_work* work = impl->work_free;
 	if (work == NULL)
-	{
 		work = hiw_malloc(sizeof(hiw_internal_thread_work));
-		work->func = func;
-		work->data = data;
-	}
 	else
-	{
 		impl->work_next = work->next;
-	}
+	work->func = func;
+	work->data = data;
 	work->next = NULL;
 
 	// add work to the linked list
