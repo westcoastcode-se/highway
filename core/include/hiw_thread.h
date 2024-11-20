@@ -145,6 +145,50 @@ HIW_PUBLIC bool hiw_thread_start(hiw_thread* t);
  */
 HIW_PUBLIC void hiw_thread_delete(hiw_thread* t);
 
+typedef struct hiw_thread_pool hiw_thread_pool;
+
+/**
+ * A thread pool executing generic jobs
+ */
+struct HIW_PUBLIC hiw_thread_pool
+{
+	// The number of threads running at this moment
+	int count;
+
+	// The maximum number of threads allowed to run
+	int max_count;
+};
+
+/**
+ * create a new thread pool instance
+ *
+ * @param initial_count the initial thread count
+ * @param max_count the maximum number of allowed threads
+ * @return a thread pool
+ */
+extern HIW_PUBLIC hiw_thread_pool* hiw_thread_pool_new(int initial_count, int max_count);
+
+/**
+ * @brief delete the supplied thread pool and destroy all it's internal memory
+ */
+extern HIW_PUBLIC void hiw_thread_pool_delete(hiw_thread_pool* pool);
+
+/**
+ * @brief start the supplied thread pool
+ * @param pool the thread pool
+ */
+extern HIW_PUBLIC void hiw_thread_pool_start(hiw_thread_pool* pool);
+
+/**
+ * @brief push work to be executed
+ */
+extern HIW_PUBLIC void hiw_thread_pool_push(hiw_thread_pool* pool, hiw_thread_fn func, void* data);
+
+/**
+ * @brief Get the thread pool responsible for running the supplied thread
+ */
+extern HIW_PUBLIC hiw_thread_pool* hiw_thread_pool_get(hiw_thread* t);
+
 #ifdef __cplusplus
 }
 #endif
