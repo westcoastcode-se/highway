@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <netinet/tcp.h>
 
-#define hiw_socket_close(s) close(s)
+#define hiw_socket_close(s) shutdown(s, SHUT_RDWR)
 #define SOCKET int
 #define INVALID_SOCKET -1
 #endif

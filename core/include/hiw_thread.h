@@ -25,7 +25,7 @@ extern "C" {
 struct HIW_PUBLIC hiw_thread_context
 {
 	// a unique key of this context
-	void* key;
+	const void* key;
 
 	// the value associated with this context
 	void* value;

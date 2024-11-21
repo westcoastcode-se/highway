@@ -286,7 +286,10 @@ void hiw_servlet_thread_delete(hiw_servlet_thread* const st)
 	if (st == NULL)
 		return;
 	if (st->thread != NULL)
+	{
 		hiw_thread_delete(st->thread);
+		st->thread = NULL;
+	}
 	log_infof("hiw_servlet_thread(%p) deleted", st);
 	free(st);
 }

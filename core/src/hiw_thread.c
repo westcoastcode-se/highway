@@ -107,6 +107,7 @@ void* hiw_thread_entrypoint(void* const p)
 	fflush(stdout);
 #if !defined(HIW_WINDOWS)
 	return NULL;
+#else
 #endif
 }
 
@@ -281,7 +282,6 @@ bool hiw_thread_start(hiw_thread* const t)
 			log_errorf("could not spawn new thread. pthread_create = %d", ret);
 			return false;
 		}
-		pthread_detach(t->handle);
 #endif
 		return true;
 	}
