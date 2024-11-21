@@ -142,7 +142,7 @@ typedef struct hiw_servlet_config hiw_servlet_config;
 typedef struct hiw_servlet_thread hiw_servlet_thread;
 
 // A function definition for when a new servlet thread is spawned
-typedef void (*hiw_servlet_start_fn)(struct hiw_servlet_thread*);
+typedef void (*hiw_servlet_start_fn)(hiw_servlet_thread*);
 
 // A function definition for a servlet function
 typedef void (*hiw_servlet_fn)(hiw_request*, hiw_response*);
@@ -179,24 +179,6 @@ typedef struct hiw_servlet hiw_servlet;
 
 // A flag that the servlet owns the memory of the server
 #define hiw_servlet_flags_server_owner (1 << 0)
-
-/**
- * A servlet thread
- */
-struct HIW_PUBLIC hiw_servlet_thread
-{
-	// The servlet
-	hiw_servlet* servlet;
-
-	// The thread this servlet
-	hiw_thread* thread;
-
-	// The filter chain used in this servlet thread
-	hiw_filter_chain filter_chain;
-
-	// The next thread
-	hiw_servlet_thread* next;
-};
 
 enum HIW_PUBLIC hiw_servlet_error
 {

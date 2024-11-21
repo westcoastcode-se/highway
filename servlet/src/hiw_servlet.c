@@ -7,6 +7,24 @@
 #include "hiw_logger.h"
 #include <assert.h>
 
+/**
+ * @brief a servlet thread
+ */
+struct hiw_servlet_thread
+{
+	// The servlet
+	hiw_servlet* servlet;
+
+	// The thread this servlet
+	hiw_thread* thread;
+
+	// The filter chain used in this servlet thread
+	hiw_filter_chain filter_chain;
+
+	// The next thread
+	hiw_servlet_thread* next;
+};
+
 struct hiw_internal_request
 {
 	// public implementation
