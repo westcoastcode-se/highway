@@ -53,6 +53,13 @@ else ()
     set(SOCKET_LIBRARIES)
 endif ()
 
+add_library(common_library INTERFACE)
+if (MSVC)
+    target_compile_options(common_library INTERFACE /DHIW_HTTP_STATIC_LIB_COMPILING)
+else ()
+    target_compile_options(common_library INTERFACE -DHIW_HTTP_STATIC_LIB_COMPILING)
+endif ()
+
 add_library(statically_link INTERFACE)
 if (MSVC)
 else ()
@@ -79,7 +86,7 @@ add_library(highway
         "core/src/hiw_mimetypes.c"
 )
 target_include_directories(highway PUBLIC core/include)
-target_link_libraries(highway PRIVATE common ${SOCKET_LIBRARIES})
+target_link_libraries(highway PRIVATE common common_library ${SOCKET_LIBRARIES})
 
 #
 # Highway Servlet
@@ -90,7 +97,7 @@ add_library(highway_servlet
 )
 target_include_directories(highway_servlet PUBLIC core/include)
 target_include_directories(highway_servlet PUBLIC servlet/include)
-target_link_libraries(highway_servlet PRIVATE common highway ${SOCKET_LIBRARIES})
+target_link_libraries(highway_servlet PRIVATE common common_library highway ${SOCKET_LIBRARIES})
 
 #
 # Highway Boot
@@ -101,7 +108,7 @@ add_library(highway_boot
 target_include_directories(highway_boot PUBLIC core/include)
 target_include_directories(highway_boot PUBLIC servlet/include)
 target_include_directories(highway_boot PUBLIC boot/include)
-target_link_libraries(highway_boot PRIVATE common highway highway_servlet statically_link ${SOCKET_LIBRARIES})
+target_link_libraries(highway_boot PRIVATE common common_library highway highway_servlet statically_link ${SOCKET_LIBRARIES})
 
 #
 # Hello World Executable

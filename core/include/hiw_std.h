@@ -30,7 +30,7 @@ extern "C" {
 #endif
 #endif
 
-#if WCC_HTTP_SLIB_COMPILING
+#if defined(HIW_HTTP_STATIC_LIB_COMPILING)
 #if defined(__cplusplus)
 #define HIW_PUBLIC HIW_EXPORT
 #else
