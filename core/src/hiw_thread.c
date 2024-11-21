@@ -65,13 +65,25 @@ bool critical_section_wait(pthread_cond_t* cond, pthread_mutex_t* mutex, const i
 
 #include <assert.h>
 
+// flag that's used to tell us that the thread is running on the main/entrypoint thread
+#define hiw_thread_flags_main (1 << 0)
+
 /**
  * Internal structure for a thread
  */
-struct hiw_internal_thread
+struct hiw_thread
 {
-	// the public implementation
-	hiw_thread pub;
+	// thread flags
+	int flags;
+
+	// User-data
+	void* data;
+
+	// function to be called when this thread is spawned
+	hiw_thread_fn func;
+
+	// the leaf context containing the underlying value
+	hiw_thread_context* context;
 
 #if defined(HIW_WINDOWS)
 	// a handle to the thread
@@ -82,17 +94,15 @@ struct hiw_internal_thread
 	bool started;
 };
 
-typedef struct hiw_internal_thread hiw_internal_thread;
-
 #if defined(HIW_WINDOWS)
 void hiw_thread_entrypoint(void* p)
 #else
-void* hiw_thread_entrypoint(void* p)
+void* hiw_thread_entrypoint(void* const p)
 #endif
 {
-	hiw_internal_thread* const t = (hiw_internal_thread*)p;
+	hiw_thread* const t = p;
 	log_debugf("hiw_thread(%p) thread entrypoint", t);
-	(t->pub.func)(&t->pub);
+	(t->func)(t);
 	log_debugf("hiw_thread(%p) thread entrypoint done", t);
 	fflush(stdout);
 #if !defined(HIW_WINDOWS)
@@ -105,17 +115,17 @@ hiw_thread* hiw_thread_new(hiw_thread_fn fn)
 	assert(fn != NULL && "expected 'fn' to exist");
 	if (fn == NULL)
 		return NULL;
-	hiw_internal_thread* const t = hiw_malloc(sizeof(hiw_internal_thread));
-	t->pub.flags = 0;
-	t->pub.data = NULL;
-	t->pub.func = fn;
-	t->pub.context = NULL;
+	hiw_thread* const t = hiw_malloc(sizeof(hiw_thread));
+	t->flags = 0;
+	t->data = NULL;
+	t->func = fn;
+	t->context = NULL;
 #if defined(HIW_WINDOWS)
 	t->handle = NULL;
 #else
 #endif
 	t->started = false;
-	return &t->pub;
+	return t;
 }
 
 void hiw_thread_wait(hiw_thread* t, int wait_ms)
@@ -128,25 +138,23 @@ void hiw_thread_wait(hiw_thread* t, int wait_ms)
 
 	log_debugf("hiw_thread(%p) stopping and wait", t);
 
-	hiw_internal_thread* const impl = (struct hiw_internal_thread*)t;
-
 	// TODO: Add some kind of notification for that we want to close the thread. For the library itself
 	//       this happens automatically because we are closing the socket and thus causes the recv function in
 	//       returning with an error code
 
 #if defined(HIW_WINDOWS)
-	if (impl->handle != INVALID_HANDLE_VALUE)
+	if (t->handle != INVALID_HANDLE_VALUE)
 	{
-		WaitForSingleObject(impl->handle, (DWORD)wait_ms);
+		WaitForSingleObject(t->handle, (DWORD)wait_ms);
 		// the handle is automatically closed when the thread exits
-		impl->handle = INVALID_HANDLE_VALUE;
+		t->handle = INVALID_HANDLE_VALUE;
 	}
 #else
-	if (impl->started)
+	if (t->started)
 	{
 		log_debugf("hiw_thread(%p) joining", t);
-		pthread_join(impl->handle, NULL);
-		impl->started = false;
+		pthread_join(t->handle, NULL);
+		t->started = false;
 	}
 #endif
 
@@ -155,15 +163,16 @@ void hiw_thread_wait(hiw_thread* t, int wait_ms)
 
 hiw_thread* hiw_thread_main()
 {
-	static hiw_internal_thread main = {.pub.flags = hiw_thread_flags_main,
-									   .pub.func = NULL,
-									   .pub.context = NULL,
+	static hiw_thread main = {.flags = hiw_thread_flags_main,
+							  .data = NULL,
+							  .func = NULL,
+							  .context = NULL,
 #if defined(HIW_WINDOWS)
-									   .handle = NULL,
+							  .handle = NULL,
 #else
 #endif
-									   .started = false};
-	return &main.pub;
+							  .started = false};
+	return &main;
 }
 
 void hiw_thread_set_func(hiw_thread* t, hiw_thread_fn fn)
@@ -171,16 +180,15 @@ void hiw_thread_set_func(hiw_thread* t, hiw_thread_fn fn)
 	assert(t != NULL && "expected 't' to exist");
 	if (t == NULL)
 		return;
-	hiw_internal_thread* const thread = (struct hiw_internal_thread*)t;
-	if (thread->handle != 0)
+	if (t->handle != 0)
 	{
 		log_error("you are trying to set thread function while it's running");
 		return;
 	}
-	thread->pub.func = fn;
+	t->func = fn;
 }
 
-void hiw_thread_set_userdata(hiw_thread* t, void* data)
+void hiw_thread_set_userdata(hiw_thread* const t, void* const data)
 {
 	assert(t != NULL && "expected 't' to exist");
 	if (t == NULL)
@@ -188,7 +196,7 @@ void hiw_thread_set_userdata(hiw_thread* t, void* data)
 	t->data = data;
 }
 
-void* hiw_thread_get_userdata(hiw_thread* t)
+void* hiw_thread_get_userdata(const hiw_thread* const t)
 {
 	assert(t != NULL && "expected 't' to exist");
 	if (t == NULL)
@@ -196,22 +204,24 @@ void* hiw_thread_get_userdata(hiw_thread* t)
 	return t->data;
 }
 
-hiw_thread_context* hiw_thread_context_push(hiw_thread* thread, hiw_thread_context* value)
+hiw_thread_context* hiw_thread_context_push(hiw_thread* const t, hiw_thread_context* const value)
 {
-	hiw_thread_context* const prev = thread->context;
-	value->thread = thread;
-	value->parent = thread->context;
-	thread->context = value;
+	hiw_thread_context* const prev = t->context;
+	value->thread = t;
+	value->parent = t->context;
+	t->context = value;
 	return prev;
 }
 
-hiw_thread_context* hiw_thread_context_pop(hiw_thread* thread)
+hiw_thread_context* hiw_thread_context_pop(hiw_thread* const t)
 {
-	hiw_thread_context* const prev = thread->context;
-	if (thread->context != NULL)
-		thread->context = thread->context->parent;
+	hiw_thread_context* const prev = t->context;
+	if (t->context != NULL)
+		t->context = t->context->parent;
 	return prev;
 }
+
+void hiw_thread_context_clear(hiw_thread* const t) { t->context = NULL; }
 
 void* hiw_thread_context_find_traverse(const hiw_thread_context* const context, const void* const key)
 {
@@ -222,13 +232,13 @@ void* hiw_thread_context_find_traverse(const hiw_thread_context* const context, 
 	return NULL;
 }
 
-void* hiw_thread_context_find(hiw_thread* const thread, const void* key)
+void* hiw_thread_context_find(const hiw_thread* const t, const void* key)
 {
 	assert(key != NULL && "expected 'key' to exist");
 	if (key == NULL)
 		return NULL;
-	if (thread->context != NULL)
-		return hiw_thread_context_find_traverse(thread->context, key);
+	if (t->context != NULL)
+		return hiw_thread_context_find_traverse(t->context, key);
 	return NULL;
 }
 
@@ -237,8 +247,7 @@ bool hiw_thread_start(hiw_thread* const t)
 	assert(t != NULL && "expected 't' to exist");
 	if (t == NULL)
 		return false;
-	hiw_internal_thread* const thread = (struct hiw_internal_thread*)t;
-	if (thread->started)
+	if (t->started)
 	{
 		log_warnf("hiw_thread(%p) is already started", t);
 		return true;
@@ -247,7 +256,7 @@ bool hiw_thread_start(hiw_thread* const t)
 	if (hiw_bit_test(t->flags, hiw_thread_flags_main))
 	{
 		log_debugf("hiw_thread(%p) starting main", t);
-		thread->started = true;
+		t->started = true;
 		(t->func)(t);
 		log_debugf("hiw_thread(%p) stopped main", t);
 		return true;
@@ -255,24 +264,24 @@ bool hiw_thread_start(hiw_thread* const t)
 	else
 	{
 #if defined(HIW_WINDOWS)
-		thread->started = true;
-		thread->handle = (HANDLE)_beginthread(hiw_thread_entrypoint, 0, t);
-		if (thread->handle == 0)
+		t->started = true;
+		t->handle = (HANDLE)_beginthread(hiw_thread_entrypoint, 0, t);
+		if (t->handle == 0)
 		{
-			thread->started = false;
+			t->started = false;
 			log_errorf("could not spawn new thread. errno = %d", errno);
 			return false;
 		}
 #else
-		thread->started = true;
-		const int ret = pthread_create(&thread->handle, NULL, hiw_thread_entrypoint, t);
+		t->started = true;
+		const int ret = pthread_create(&t->handle, NULL, hiw_thread_entrypoint, t);
 		if (ret != 0)
 		{
-			thread->started = false;
+			t->started = false;
 			log_errorf("could not spawn new thread. pthread_create = %d", ret);
 			return false;
 		}
-		pthread_detach(thread->handle);
+		pthread_detach(t->handle);
 #endif
 		return true;
 	}
@@ -285,10 +294,9 @@ void hiw_thread_delete(hiw_thread* t)
 		return;
 	if (hiw_bit_test(t->flags, hiw_thread_flags_main))
 		return;
-	hiw_internal_thread* const thread = (struct hiw_internal_thread*)t;
 	log_debugf("hiw_thread(%p) deleting", t);
 	hiw_thread_wait(t, HIW_THREAD_WAIT_DEFAULT_TIMEOUT);
-	free(thread);
+	free(t);
 }
 
 int HIW_THREAD_POOL_KEY = 0;
@@ -482,8 +490,10 @@ void hiw_thread_pool_func(hiw_thread* const t)
 
 hiw_thread_pool* hiw_thread_pool_new(const hiw_thread_pool_config* config)
 {
-	// TODO add support for shrinking thread pools
+	// TODO add support for shrinking thread count
 	assert(config->allow_shrink == false && "shrinking the threads are not supported yet");
+	// TODO add support for increasing thread count
+	assert(config->max_count == config->count && "increasing thread count dynamically are not supported yet");
 
 	hiw_thread_pool* const impl = hiw_malloc(sizeof(hiw_thread_pool));
 	impl->config = *config;

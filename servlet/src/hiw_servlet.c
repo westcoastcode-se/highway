@@ -684,7 +684,7 @@ void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 		hiw_client* const client = hiw_server_accept(st->servlet->server);
 		if (client == NULL)
 		{
-			log_infof("[t:%p] %d client accept failed", request.thread->thread, request.thread->thread->flags);
+			log_infof("[t:%p] client accept failed", request.thread->thread);
 			continue; // continue will go back up, and if the server is no longer running then exit!
 		}
 		log_infof("[t:%p][c:%p] %s connected", request.thread->thread, request.client, hiw_client_get_address(client));

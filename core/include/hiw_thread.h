@@ -12,15 +12,15 @@
 extern "C" {
 #endif
 
-#define hiw_thread_flags_main (1 << 0)
-
 // Default timeout for when the thread is waiting for a thread to stop running
 #if !defined(HIW_THREAD_WAIT_DEFAULT_TIMEOUT)
 #define HIW_THREAD_WAIT_DEFAULT_TIMEOUT (30000)
 #endif
 
 /**
- * Context that can be used to recursively supply generic data to a thread
+ * @brief context that can be used to recursively supply generic data to a thread
+ *
+ * it is expected that you push and pop data in the appropriate order.
  */
 struct HIW_PUBLIC hiw_thread_context
 {
@@ -36,29 +36,12 @@ struct HIW_PUBLIC hiw_thread_context
 	// parent context
 	struct hiw_thread_context* parent;
 };
+
 typedef struct hiw_thread_context hiw_thread_context;
+typedef struct hiw_thread hiw_thread;
 
 // a function definition for a highway thread
-HIW_PUBLIC typedef void (*hiw_thread_fn)(struct hiw_thread*);
-
-/**
- * Represents a thread managed by highway
- */
-struct HIW_PUBLIC hiw_thread
-{
-	// thread flags
-	int flags;
-
-	// User-data
-	void* data;
-
-	// function to be called when this thread is spawned
-	hiw_thread_fn func;
-
-	// the leaf context containing the underlying value
-	hiw_thread_context* context;
-};
-typedef struct hiw_thread hiw_thread;
+typedef void (*hiw_thread_fn)(hiw_thread*);
 
 /**
  * Create memory for a new thread
@@ -78,7 +61,7 @@ HIW_PUBLIC hiw_thread* hiw_thread_new(hiw_thread_fn fn);
 HIW_PUBLIC void hiw_thread_wait(hiw_thread* t, int wait_ms);
 
 /**
- * @return The instance that represents the main thread
+ * @return A thread instance that represents the main thread
  */
 HIW_PUBLIC hiw_thread* hiw_thread_main();
 
@@ -92,45 +75,54 @@ HIW_PUBLIC hiw_thread* hiw_thread_main();
 HIW_PUBLIC void hiw_thread_set_func(hiw_thread* t, hiw_thread_fn fn);
 
 /**
- * Set user data
- *
+ * @brief set user data associated with the supplied thread
  * @param t the thread to set the data to
  * @param data the user data
  */
 HIW_PUBLIC void hiw_thread_set_userdata(hiw_thread* t, void* data);
 
 /**
- * Get user data
+ * @brief Get user data associated with the supplied thread
+ * @param t The thread to get the data from
  *
- * @param t the thread to get the data from
+ * Please note that a thread is only allowed to have one user-data associated with it. It's normally
+ * used as a way to send data into the thread's entrypoint. If you want to put values onto the thread as
+ * thread-local like variables, then consider using hiw_thread_context_push.
  */
-HIW_PUBLIC void* hiw_thread_get_userdata(hiw_thread* t);
+HIW_PUBLIC void* hiw_thread_get_userdata(const hiw_thread* t);
 
 /**
- * Push a new context for a thread
- *
- * @param thread
- * @param value
+ * @brief Push a new context value onto a thread
+ * @param t the thread
+ * @param value the value
  * @return the previous context
+ *
+ * You are allowed to push multiple values onto the thread, and they are all searchable using the
+ * function hiw_thread_context_find. Please note that you are expected to pop the values
+ * when you are done with them
  */
-HIW_PUBLIC hiw_thread_context* hiw_thread_context_push(hiw_thread* thread, hiw_thread_context* value);
+HIW_PUBLIC hiw_thread_context* hiw_thread_context_push(hiw_thread* t, hiw_thread_context* value);
 
 /**
- * Pop a new context for a thread
- *
- * @param thread
- * @return the value removed from the thread context stack
+ * @brief Pop a value from the supplied thread
+ * @param t the thread
+ * @return the value removed from the thread context
  */
-HIW_PUBLIC hiw_thread_context* hiw_thread_context_pop(hiw_thread* thread);
+HIW_PUBLIC hiw_thread_context* hiw_thread_context_pop(hiw_thread* t);
 
 /**
- * Pop a new context for a thread
- *
- * @param thread
- * @param key The context key
- * @return The value - if one is found; NULL otherwise
+ * @brief Clear all context values from the thread
+ * @param t the thread
  */
-HIW_PUBLIC void* hiw_thread_context_find(hiw_thread* thread, const void* key);
+HIW_PUBLIC void hiw_thread_context_clear(hiw_thread* t);
+
+/**
+ * @brief Search for a context value form the supplied thread
+ * @param t the thread
+ * @param key A key that represents the context value
+ * @return The value, if one is found; NULL otherwise
+ */
+HIW_PUBLIC void* hiw_thread_context_find(const hiw_thread* t, const void* key);
 
 /**
  * Start the supplied thread
