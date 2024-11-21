@@ -145,6 +145,9 @@ HIW_PUBLIC bool hiw_thread_start(hiw_thread* t);
  */
 HIW_PUBLIC void hiw_thread_delete(hiw_thread* t);
 
+/**
+ * @brief thread pool configuration
+ */
 struct HIW_PUBLIC hiw_thread_pool_config
 {
 	// The number of threads running at this moment
@@ -156,16 +159,8 @@ struct HIW_PUBLIC hiw_thread_pool_config
 	// allow the thread pool to shrink as load goes down
 	bool allow_shrink;
 };
-typedef struct hiw_thread_pool_config hiw_thread_pool_config;
 
-/**
- * A thread pool executing generic jobs
- */
-struct HIW_PUBLIC hiw_thread_pool
-{
-	// thread pool config
-	hiw_thread_pool_config config;
-};
+typedef struct hiw_thread_pool_config hiw_thread_pool_config;
 typedef struct hiw_thread_pool hiw_thread_pool;
 
 /**
