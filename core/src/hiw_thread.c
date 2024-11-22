@@ -419,8 +419,11 @@ void hiw_thread_pool_work_done(hiw_thread_pool* const pool, hiw_thread_pool_work
  * @brief get pending work to be executed by a thread pool worker
  * @param pool the thread pool
  * @return a worker to be executed
+ *
+ * Please note that this function is UNSAFE, which means that you have to lock any appropriate
+ * critical sections before calling this function
  */
-hiw_thread_pool_work* hiw_thread_pool_pop_work(hiw_thread_pool* const pool)
+hiw_thread_pool_work* hiw_thread_pool_pop_work_UNSAFE(hiw_thread_pool* const pool)
 {
 	hiw_thread_pool_work* work = pool->work_next;
 
@@ -460,7 +463,7 @@ void hiw_thread_pool_func(hiw_thread* const t)
 	hiw_thread_context value = {.key = &HIW_THREAD_POOL_KEY, .value = pool};
 	hiw_thread_context_push(t, &value);
 
-	// initialize this worker
+	log_debugf("[t:%p] initializing worker thread", t);
 	pool->config.init(t);
 
 	while (1)
@@ -478,7 +481,7 @@ void hiw_thread_pool_func(hiw_thread* const t)
 			break;
 
 		// get work if exists
-		hiw_thread_pool_work* const work = hiw_thread_pool_pop_work(pool);
+		hiw_thread_pool_work* const work = hiw_thread_pool_pop_work_UNSAFE(pool);
 		critical_section_exit(&pool->mutex);
 
 		// run work if exists
@@ -494,7 +497,7 @@ void hiw_thread_pool_func(hiw_thread* const t)
 	log_debugf("[t:%p] shutting down", t);
 	critical_section_exit(&pool->mutex);
 
-	// release this worker
+	log_debugf("[t:%p] releasing worker thread", t);
 	pool->config.release(t);
 
 	hiw_thread_context_pop(worker->thread);
@@ -561,7 +564,7 @@ void hiw_thread_pool_delete(hiw_thread_pool* const pool)
 		}
 	}
 
-	// cleanup
+	// cleanup workers
 	hiw_thread_pool_worker* worker = pool->worker_first;
 	while (worker != NULL)
 	{
@@ -569,6 +572,15 @@ void hiw_thread_pool_delete(hiw_thread_pool* const pool)
 		hiw_thread_delete(worker->thread);
 		free(worker);
 		worker = next;
+	}
+
+	// cleanup work
+	hiw_thread_pool_work* work = pool->work_free;
+	while (work != NULL)
+	{
+		hiw_thread_pool_work* const next = work->next;
+		free(work);
+		work = next;
 	}
 
 	critical_cond_destroy(&pool->work_cond);
@@ -590,33 +602,67 @@ void hiw_thread_pool_start(hiw_thread_pool* const pool)
 	log_infof("hiw_thread_pool(%p) started", pool);
 }
 
-void hiw_thread_pool_push(hiw_thread_pool* const poo, hiw_thread_fn func, void* data)
+/**
+ * @return Create new work memory or reuse cached work memory
+ *
+ * Please note that this function is UNSAFE, which means that you have to lock any appropriate
+ * critical sections before calling this function
+ */
+hiw_thread_pool_work* hiw_thread_pool_work_new_UNSAFE(hiw_thread_pool* const pool, hiw_thread_fn func, void* data)
 {
-	critical_section_enter(&poo->mutex);
-
-	// get work memory
-	hiw_thread_pool_work* work = poo->work_free;
+	// try to get free work memory
+	hiw_thread_pool_work* work = pool->work_free;
 	if (work == NULL)
 		work = hiw_malloc(sizeof(hiw_thread_pool_work));
 	else
-		poo->work_next = work->next;
+		pool->work_next = work->next;
 	work->func = func;
 	work->data = data;
 	work->next = NULL;
+	return work;
+}
+
+void hiw_thread_pool_push(hiw_thread_pool* const pool, hiw_thread_fn func, void* data)
+{
+	critical_section_enter(&pool->mutex);
+
+	// get work memory
+	hiw_thread_pool_work* work = hiw_thread_pool_work_new_UNSAFE(pool, func, data);
 
 	// add work to the linked list
-
-	if (poo->work_last == NULL)
+	if (pool->work_last == NULL)
 	{
-		poo->work_next = poo->work_last = work;
+		pool->work_next = pool->work_last = work;
 	}
 	else
 	{
-		poo->work_last->next = work;
+		pool->work_last->next = work;
 	}
 
-	critical_section_notify(&poo->work_cond);
-	critical_section_exit(&poo->mutex);
+	critical_section_notify(&pool->work_cond);
+	critical_section_exit(&pool->mutex);
+}
+
+void hiw_thread_pool_push_prioritized(hiw_thread_pool* pool, hiw_thread_fn func, void* data)
+{
+	critical_section_enter(&pool->mutex);
+
+	// get work memory
+	hiw_thread_pool_work* work = hiw_thread_pool_work_new_UNSAFE(pool, func, data);
+
+	// add work to the linked list
+	if (pool->work_next == NULL)
+	{
+		pool->work_next = pool->work_last = work;
+	}
+	else
+	{
+		work->next = pool->work_next;
+		pool->work_next = work;
+	}
+
+	critical_section_notify(&pool->work_cond);
+	critical_section_exit(&pool->mutex);
 }
 
 hiw_thread_pool* hiw_thread_pool_get(hiw_thread* const t) { return hiw_thread_context_find(t, &HIW_THREAD_POOL_KEY); }

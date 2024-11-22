@@ -181,9 +181,20 @@ extern HIW_PUBLIC void hiw_thread_pool_delete(hiw_thread_pool* pool);
 extern HIW_PUBLIC void hiw_thread_pool_start(hiw_thread_pool* pool);
 
 /**
- * @brief push work to be executed
+ * @brief Push new work to be executed as soon as already pushed work is done
+ * @param pool The thread pool
+ * @param func The function to be called
+ * @param data User data associated with the call
  */
 extern HIW_PUBLIC void hiw_thread_pool_push(hiw_thread_pool* pool, hiw_thread_fn func, void* data);
+
+/**
+ * @brief Push new work to be executed as soon quickly as possible
+ * @param pool The thread pool
+ * @param func The function to be called
+ * @param data User data associated with the call
+ */
+extern HIW_PUBLIC void hiw_thread_pool_push_prioritized(hiw_thread_pool* pool, hiw_thread_fn func, void* data);
 
 /**
  * @brief Get the thread pool responsible for running the supplied thread
