@@ -443,6 +443,11 @@ hiw_thread_pool_work* hiw_thread_pool_pop_work(hiw_thread_pool* const pool)
 }
 
 /**
+ * @brief a function that represents doing nothing
+ */
+void hiw_thread_pool_do_nothing(hiw_thread* const t) {}
+
+/**
  * @brief function used by a thread pool worker to execute work
  * @param t the thread
  */
@@ -454,6 +459,9 @@ void hiw_thread_pool_func(hiw_thread* const t)
 	// make sure that the thread pool is available as a context value on the thread
 	hiw_thread_context value = {.key = &HIW_THREAD_POOL_KEY, .value = pool};
 	hiw_thread_context_push(t, &value);
+
+	// initialize this worker
+	pool->config.init(t);
 
 	while (1)
 	{
@@ -485,6 +493,10 @@ void hiw_thread_pool_func(hiw_thread* const t)
 
 	log_debugf("[t:%p] shutting down", t);
 	critical_section_exit(&pool->mutex);
+
+	// release this worker
+	pool->config.release(t);
+
 	hiw_thread_context_pop(worker->thread);
 }
 
@@ -497,6 +509,10 @@ hiw_thread_pool* hiw_thread_pool_new(const hiw_thread_pool_config* config)
 
 	hiw_thread_pool* const impl = hiw_malloc(sizeof(hiw_thread_pool));
 	impl->config = *config;
+	if (impl->config.init == NULL)
+		impl->config.init = hiw_thread_pool_do_nothing;
+	if (impl->config.release == NULL)
+		impl->config.release = hiw_thread_pool_do_nothing;
 	impl->worker_first = NULL;
 	impl->worker_last = NULL;
 	impl->work_next = NULL;

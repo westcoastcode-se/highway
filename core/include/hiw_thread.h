@@ -137,6 +137,9 @@ HIW_PUBLIC bool hiw_thread_start(hiw_thread* t);
  */
 HIW_PUBLIC void hiw_thread_delete(hiw_thread* t);
 
+typedef struct hiw_thread_pool_config hiw_thread_pool_config;
+typedef struct hiw_thread_pool hiw_thread_pool;
+
 /**
  * @brief thread pool configuration
  */
@@ -150,21 +153,24 @@ struct HIW_PUBLIC hiw_thread_pool_config
 
 	// allow the thread pool to shrink as load goes down
 	bool allow_shrink;
+
+	// function called after a new thread is created
+	hiw_thread_fn init;
+
+	// function called before a thread is being destroyed
+	hiw_thread_fn release;
 };
 
-typedef struct hiw_thread_pool_config hiw_thread_pool_config;
-typedef struct hiw_thread_pool hiw_thread_pool;
-
 /**
- * create a new thread pool instance
- *
- * @param config the thread pool config
- * @return a thread pool
+ * @brief Create a new thread pool instance
+ * @param config Configuration used by the thread pool during initialization
+ * @return A thread pool instance
  */
 extern HIW_PUBLIC hiw_thread_pool* hiw_thread_pool_new(const hiw_thread_pool_config* config);
 
 /**
- * @brief delete the supplied thread pool and destroy all it's internal memory
+ * @brief Stop the thread pool and then cleanup up all memory associated with it
+ * @param pool The thread pool
  */
 extern HIW_PUBLIC void hiw_thread_pool_delete(hiw_thread_pool* pool);
 

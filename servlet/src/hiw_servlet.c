@@ -248,6 +248,10 @@ void hiw_servlet_start_func_default(hiw_servlet_thread* st)
 	log_debugf("hiw_thread(%p) default start function done", st->thread);
 }
 
+/**
+ * @brief thread entry-point for servlet threads
+ * @param t the thread
+ */
 void hiw_servlet_func(hiw_thread* t)
 {
 	log_debugf("hiw_thread(%p) servlet thread starting", t);
