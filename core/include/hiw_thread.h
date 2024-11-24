@@ -189,17 +189,58 @@ extern HIW_PUBLIC void hiw_thread_pool_start(hiw_thread_pool* pool);
 extern HIW_PUBLIC void hiw_thread_pool_push(hiw_thread_pool* pool, hiw_thread_fn func, void* data);
 
 /**
- * @brief Push new work to be executed as soon quickly as possible
- * @param pool The thread pool
- * @param func The function to be called
- * @param data User data associated with the call
- */
-extern HIW_PUBLIC void hiw_thread_pool_push_prioritized(hiw_thread_pool* pool, hiw_thread_fn func, void* data);
-
-/**
  * @brief Get the thread pool responsible for running the supplied thread
  */
 extern HIW_PUBLIC hiw_thread_pool* hiw_thread_pool_get(const hiw_thread* t);
+
+/**
+ * @brief Type that represents a critical section
+ */
+typedef struct hiw_thread_critical_sec hiw_thread_critical_sec;
+
+/**
+ * @brief Initialize a critical section
+ * @param c The critical section
+ */
+extern HIW_PUBLIC void hiw_thread_critical_sec_init(hiw_thread_critical_sec* c);
+
+/**
+ * @brief Release a critical section
+ * @param c The critical section
+ */
+extern HIW_PUBLIC void hiw_thread_critical_sec_release(hiw_thread_critical_sec* c);
+
+/**
+ * @brief Enter a critical section
+ * @param c The critical section
+ */
+extern HIW_PUBLIC void hiw_thread_critical_sec_enter(hiw_thread_critical_sec* c);
+
+/**
+ * @brief Exit the critical section
+ * @param c The critical section
+ */
+extern HIW_PUBLIC void hiw_thread_critical_sec_exit(hiw_thread_critical_sec* c);
+
+/**
+ * @brief Wait for the critical section to awake
+ * @param c The critical section
+ * @param timeout The timeout, in milliseconds
+ * @return true if the critical section is waking up due to the timeout being reached
+ */
+extern HIW_PUBLIC bool hiw_thread_critical_sec_wait(hiw_thread_critical_sec* c, int timeout);
+
+/**
+ * @brief Notify one sleeping critical section
+ * @param c The critical section
+ */
+extern HIW_PUBLIC void hiw_thread_critical_sec_notify_one(hiw_thread_critical_sec* c);
+
+/**
+ * @brief Notify all sleeping critical sections
+ * @param c The critical section
+ */
+extern HIW_PUBLIC void hiw_thread_critical_sec_notify_all(hiw_thread_critical_sec* c);
 
 #ifdef __cplusplus
 }
