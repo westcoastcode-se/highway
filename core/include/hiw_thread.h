@@ -199,7 +199,7 @@ extern HIW_PUBLIC void hiw_thread_pool_push_prioritized(hiw_thread_pool* pool, h
 /**
  * @brief Get the thread pool responsible for running the supplied thread
  */
-extern HIW_PUBLIC hiw_thread_pool* hiw_thread_pool_get(hiw_thread* t);
+extern HIW_PUBLIC hiw_thread_pool* hiw_thread_pool_get(const hiw_thread* t);
 
 #ifdef __cplusplus
 }

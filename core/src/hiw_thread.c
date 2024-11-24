@@ -346,7 +346,7 @@ struct hiw_thread_pool
 	hiw_thread_pool_config config;
 
 	// thread pool is running
-	volatile atomic_bool running;
+	volatile bool running;
 
 	// The first worker in the thread pool
 	hiw_thread_pool_worker* worker_first;
@@ -665,4 +665,7 @@ void hiw_thread_pool_push_prioritized(hiw_thread_pool* pool, hiw_thread_fn func,
 	critical_section_exit(&pool->mutex);
 }
 
-hiw_thread_pool* hiw_thread_pool_get(hiw_thread* const t) { return hiw_thread_context_find(t, &HIW_THREAD_POOL_KEY); }
+hiw_thread_pool* hiw_thread_pool_get(const hiw_thread* const t)
+{
+	return hiw_thread_context_find(t, &HIW_THREAD_POOL_KEY);
+}
