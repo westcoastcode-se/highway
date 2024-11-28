@@ -154,11 +154,9 @@ struct HIW_PUBLIC hiw_thread_pool_config
 	// allow the thread pool to shrink as load goes down
 	bool allow_shrink;
 
-	// function called after a new thread is created
-	hiw_thread_fn init;
-
-	// function called before a thread is being destroyed
-	hiw_thread_fn release;
+	// Function called as the thread is starting up, but before the main function is executed.
+	// Please note that you are expected to call "hiw_thread_pool_main" manually
+	hiw_thread_fn on_start;
 };
 
 /**
@@ -192,6 +190,14 @@ extern HIW_PUBLIC void hiw_thread_pool_push(hiw_thread_pool* pool, hiw_thread_fn
  * @brief Get the thread pool responsible for running the supplied thread
  */
 extern HIW_PUBLIC hiw_thread_pool* hiw_thread_pool_get(const hiw_thread* t);
+
+/**
+ * @brief The main thread pool function
+ *
+ * You must call this manually if you're overriding the init function. This function will exit
+ * when the thread pool worker is shutting down
+ */
+extern HIW_PUBLIC void hiw_thread_pool_worker_main(hiw_thread* t);
 
 /**
  * @brief Type that represents a critical section

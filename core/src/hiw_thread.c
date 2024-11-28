@@ -489,7 +489,10 @@ hiw_thread_pool_work* hiw_thread_pool_worker_pop_work_UNSAFE(hiw_thread_pool_wor
 /**
  * @brief a function that represents doing nothing
  */
-void hiw_thread_pool_do_nothing(hiw_thread* const t) {}
+void hiw_thread_pool_do_nothing(hiw_thread* const t)
+{
+	hiw_thread_pool_worker_main(t);
+}
 
 /**
  * @brief function used by a thread pool worker to execute work
@@ -498,7 +501,7 @@ void hiw_thread_pool_do_nothing(hiw_thread* const t) {}
 void hiw_thread_pool_func(hiw_thread* const t)
 {
 	hiw_thread_pool_worker* const worker = hiw_thread_get_userdata(t);
-	log_debugf("hiw_thread_pool_worker(%p) waiting for work", worker);
+	log_debugf("[t:%p] thread starting up", worker);
 	hiw_thread_pool* const pool = worker->pool;
 
 	// make sure that the thread pool is available as a context value on the thread
@@ -506,7 +509,21 @@ void hiw_thread_pool_func(hiw_thread* const t)
 	hiw_thread_context_push(t, &value);
 
 	log_debugf("[t:%p] initializing worker thread", t);
-	pool->config.init(t);
+	pool->config.on_start(t);
+
+	log_debugf("[t:%p] shutting down", t);
+	hiw_thread_critical_sec_exit(&worker->critical_section);
+	hiw_thread_context_pop(worker->thread);
+}
+
+void hiw_thread_pool_worker_main(hiw_thread* const t)
+{
+	hiw_thread_pool_worker* const worker = hiw_thread_get_userdata(t);
+	if (worker == NULL)
+	{
+		log_errorf("[t:%p] thread worker is not in it's appropriate state", t);
+		return;
+	}
 
 	while (1)
 	{
@@ -535,14 +552,6 @@ void hiw_thread_pool_func(hiw_thread* const t)
 			hiw_thread_pool_work_done(worker, work);
 		}
 	}
-
-	log_debugf("[t:%p] shutting down", t);
-	hiw_thread_critical_sec_exit(&worker->critical_section);
-
-	log_debugf("[t:%p] releasing worker thread", t);
-	pool->config.release(t);
-
-	hiw_thread_context_pop(worker->thread);
 }
 
 /**
@@ -626,10 +635,8 @@ hiw_thread_pool* hiw_thread_pool_new(const hiw_thread_pool_config* config)
 
 	hiw_thread_pool* const impl = hiw_malloc(sizeof(hiw_thread_pool));
 	impl->config = *config;
-	if (impl->config.init == NULL)
-		impl->config.init = hiw_thread_pool_do_nothing;
-	if (impl->config.release == NULL)
-		impl->config.release = hiw_thread_pool_do_nothing;
+	if (impl->config.on_start == NULL)
+		impl->config.on_start = hiw_thread_pool_do_nothing;
 	impl->worker_first = NULL;
 	impl->worker_last = NULL;
 
