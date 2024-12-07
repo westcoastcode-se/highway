@@ -8,6 +8,34 @@
 #include <assert.h>
 
 /**
+ * The servlet is the entry-point of all http requests
+ */
+struct hiw_servlet
+{
+	// The filter chain used by all servlet threads
+	hiw_filter_chain filter_chain;
+
+	// The servlet function to be called when all filters have passed
+	hiw_servlet_fn servlet_func;
+
+	// Config
+	hiw_servlet_config config;
+
+	// The start function. Note that you are expected to call
+	// hiw_servlet_thread_start(thread)
+	hiw_servlet_start_fn start_func;
+
+	// The first servlet thread in a linked-list of threads
+	hiw_servlet_thread* threads;
+
+	// The underlying server socket
+	hiw_server* server;
+
+	// Flags associated with the servlet
+	int flags;
+};
+
+/**
  * @brief a servlet thread
  */
 struct hiw_servlet_thread
@@ -203,6 +231,45 @@ hiw_servlet* hiw_servlet_new(hiw_server* const server)
 	return s;
 }
 
+void hiw_servlet_thread_delete(hiw_servlet_thread* const st)
+{
+	log_infof("hiw_servlet_thread(%p) deleting", st);
+	if (st == NULL)
+		return;
+	if (st->thread != NULL)
+	{
+		hiw_thread_delete(st->thread);
+		st->thread = NULL;
+	}
+	log_infof("hiw_servlet_thread(%p) deleted", st);
+	free(st);
+}
+
+/**
+ * Release a servlets internal resources
+ *
+ * @param s the servlet
+ */
+void hiw_servlet_release(hiw_servlet* s)
+{
+	log_infof("hiw_servlet(%p) is releasing is resources", s);
+	hiw_server_stop(s->server);
+
+	hiw_servlet_thread* first = s->threads;
+	while (first)
+	{
+		hiw_servlet_thread* const next = first->next;
+		hiw_servlet_thread_delete(first);
+		first = next;
+	}
+
+	if (hiw_bit_test(s->flags, hiw_servlet_flags_server_owner))
+	{
+		hiw_server_delete(s->server);
+	}
+	s->server = NULL;
+}
+
 void hiw_servlet_delete(hiw_servlet* s)
 {
 	assert(s != NULL && "expected 's' to exist");
@@ -265,34 +332,15 @@ void hiw_servlet_func(hiw_thread* t)
 	log_debugf("hiw_thread(%p) servlet thread done", t);
 }
 
-hiw_servlet_thread* hiw_servlet_thread_new()
+hiw_servlet_thread* hiw_servlet_thread_new(hiw_servlet* const s)
 {
 	hiw_servlet_thread* const st = hiw_malloc(sizeof(hiw_servlet_thread));
 	st->next = NULL;
 	st->thread = hiw_thread_new(hiw_servlet_func);
-	if (st->thread == NULL)
-	{
-		free(st);
-		log_error("out of memory");
-		return NULL;
-	}
-	// attach the servlet_thread as user data so that we have access to it in the actual thread
+	st->servlet = s;
+	st->filter_chain = s->filter_chain;
 	hiw_thread_set_userdata(st->thread, st);
 	return st;
-}
-
-void hiw_servlet_thread_delete(hiw_servlet_thread* const st)
-{
-	log_infof("hiw_servlet_thread(%p) deleting", st);
-	if (st == NULL)
-		return;
-	if (st->thread != NULL)
-	{
-		hiw_thread_delete(st->thread);
-		st->thread = NULL;
-	}
-	log_infof("hiw_servlet_thread(%p) deleted", st);
-	free(st);
 }
 
 hiw_servlet_error hiw_servlet_start(hiw_servlet* const s, const hiw_servlet_config* config)
@@ -310,9 +358,7 @@ hiw_servlet_error hiw_servlet_start(hiw_servlet* const s, const hiw_servlet_conf
 	hiw_servlet_thread* last = NULL;
 	for (int i = 0; i < s->config.num_accept_threads; ++i)
 	{
-		hiw_servlet_thread* const st = hiw_servlet_thread_new();
-		st->servlet = s;
-		st->filter_chain = s->filter_chain;
+		hiw_servlet_thread* const st = hiw_servlet_thread_new(s);
 
 		if (first == NULL)
 		{
@@ -347,26 +393,6 @@ hiw_servlet_error hiw_servlet_start(hiw_servlet* const s, const hiw_servlet_conf
 	hiw_thread_start(main_servlet_thread.thread);
 
 	return HIW_SERVLET_ERROR_SUCCESS;
-}
-
-void hiw_servlet_release(hiw_servlet* s)
-{
-	log_infof("hiw_servlet(%p) is releasing is resources", s);
-	hiw_server_stop(s->server);
-
-	hiw_servlet_thread* first = s->threads;
-	while (first)
-	{
-		hiw_servlet_thread* const next = first->next;
-		hiw_servlet_thread_delete(first);
-		first = next;
-	}
-
-	if (hiw_bit_test(s->flags, hiw_servlet_flags_server_owner))
-	{
-		hiw_server_delete(s->server);
-	}
-	s->server = NULL;
 }
 
 void* hiw_filter_get_data(const hiw_filter_chain* filter) { return filter->filters->data; }

@@ -44,7 +44,6 @@ struct HIW_PUBLIC hiw_header
 	// The header value
 	hiw_string value;
 };
-
 typedef struct hiw_header hiw_header;
 
 /**
@@ -147,34 +146,6 @@ typedef void (*hiw_servlet_start_fn)(hiw_servlet_thread*);
 // A function definition for a servlet function
 typedef void (*hiw_servlet_fn)(hiw_request*, hiw_response*);
 
-/**
- * The servlet is the entry-point of all http requests
- */
-struct HIW_PUBLIC hiw_servlet
-{
-	// The filter chain used by all servlet threads
-	hiw_filter_chain filter_chain;
-
-	// The servlet function to be called when all filters have passed
-	hiw_servlet_fn servlet_func;
-
-	// Config
-	hiw_servlet_config config;
-
-	// The start function. Note that you are expected to call
-	// hiw_servlet_thread_start(thread)
-	hiw_servlet_start_fn start_func;
-
-	// The first servlet thread in a linked-list of threads
-	hiw_servlet_thread* threads;
-
-	// The underlying server socket
-	hiw_server* server;
-
-	// Flags associated with the servlet
-	int flags;
-};
-
 typedef struct hiw_servlet hiw_servlet;
 
 // A flag that the servlet owns the memory of the server
@@ -224,7 +195,9 @@ HIW_PUBLIC extern void hiw_servlet_set_filter_chain(hiw_servlet* s, const hiw_fi
 HIW_PUBLIC extern void hiw_servlet_set_func(hiw_servlet* s, hiw_servlet_fn func);
 
 /**
- * Set the starter function for a servlet. A default starter is used if this is not set
+ * Set the starter function for a servlet. A default starter is used if this is not set.
+ *
+ * It is expected that you call hiw_servlet_start_filter_chain from within the started function
  *
  * @param s the servlet
  * @param func the function
@@ -239,13 +212,6 @@ HIW_PUBLIC extern void hiw_servlet_set_starter_func(hiw_servlet* s, hiw_servlet_
  * @return FALSE if the start sequence failed
  */
 HIW_PUBLIC extern hiw_servlet_error hiw_servlet_start(hiw_servlet* s, const hiw_servlet_config* config);
-
-/**
- * Release a servlets internal resources
- *
- * @param s the servlet
- */
-HIW_PUBLIC extern void hiw_servlet_release(hiw_servlet* s);
 
 /**
  * Get the user-data from the supplied filter in a filter chain

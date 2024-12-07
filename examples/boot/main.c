@@ -5,7 +5,7 @@
 
 #include <hiw_boot.h>
 
-void on_request(const hiw_request* const req, hiw_response* const resp)
+void on_request(hiw_request* const req, hiw_response* const resp)
 {
 	if (hiw_string_cmp(req->uri, hiw_string_const("/")))
 	{
