@@ -10,18 +10,8 @@
 #include <stdio.h>
 #include <signal.h>
 
-// server
-hiw_server* server;
 // static cache
 static_cache cache;
-
-void stop_server_on_signal(int ignored)
-{
-	if (server != NULL && hiw_server_is_running(server))
-	{
-		hiw_server_stop(server);
-	}
-}
 
 void on_request(hiw_request* const req, hiw_response* const resp)
 {
@@ -46,8 +36,6 @@ void on_request(hiw_request* const req, hiw_response* const resp)
 
 int hiw_boot_init(hiw_boot_config* config)
 {
-	signal(SIGINT, stop_server_on_signal);
-
 	hiw_string data_dir = hiw_string_const("data");
 	if (config->argc > 1)
 	{
