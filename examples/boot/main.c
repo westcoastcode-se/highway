@@ -5,7 +5,7 @@
 
 #include <hiw_boot.h>
 
-void on_request(hiw_request* const req, hiw_response* const resp)
+void on_request(const hiw_request* const req, hiw_response* const resp)
 {
 	if (hiw_string_cmp(req->uri, hiw_string_const("/")))
 	{
@@ -21,11 +21,11 @@ void on_request(hiw_request* const req, hiw_response* const resp)
 	hiw_response_set_status_code(resp, 404);
 }
 
-void hiw_boot_init(hiw_boot_config* config)
+int hiw_boot_init(hiw_boot_config* config)
 {
 	// Configure the Highway Boot Framework
 	config->servlet_func = on_request;
 
 	// Start
-	hiw_boot_start(config);
+	return hiw_boot_start(config);
 }

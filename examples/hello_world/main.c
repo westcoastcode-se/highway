@@ -60,17 +60,16 @@ int main()
 		const hiw_filter filters[] = {{.func = hello_world_filter, NULL}, {0, 0}};
 
 		// Initialize the servlet
-		hiw_servlet servlet = {};
-		hiw_servlet_init(&servlet, server);
-		hiw_servlet_set_filter_chain(&servlet, filters);
-		hiw_servlet_set_func(&servlet, hello_world_servlet);
+		hiw_servlet* servlet = hiw_servlet_new(server);
+		hiw_servlet_set_filter_chain(servlet, filters);
+		hiw_servlet_set_func(servlet, hello_world_servlet);
 
 		// Start the servlet
-		hiw_servlet_start(&servlet);
+		hiw_servlet_start(servlet, NULL);
 
 		// release servlet resources
 		log_info("main before hiw_servlet_release");
-		hiw_servlet_release(&servlet);
+		hiw_servlet_delete(servlet);
 
 		// Server ownership is given to the servlet. It will be responsible for
 		// cleaning upp it's memory

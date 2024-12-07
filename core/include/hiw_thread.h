@@ -17,6 +17,11 @@ extern "C" {
 #define HIW_THREAD_WAIT_DEFAULT_TIMEOUT (30000)
 #endif
 
+typedef struct hiw_thread_context hiw_thread_context;
+typedef struct hiw_thread hiw_thread;
+typedef struct hiw_thread_pool_config hiw_thread_pool_config;
+typedef struct hiw_thread_pool hiw_thread_pool;
+
 /**
  * @brief context that can be used to recursively supply generic data to a thread
  *
@@ -31,14 +36,11 @@ struct HIW_PUBLIC hiw_thread_context
 	void* value;
 
 	// The thread this context is part of
-	struct hiw_thread* thread;
+	hiw_thread* thread;
 
 	// parent context
-	struct hiw_thread_context* parent;
+	hiw_thread_context* parent;
 };
-
-typedef struct hiw_thread_context hiw_thread_context;
-typedef struct hiw_thread hiw_thread;
 
 // a function definition for a highway thread
 typedef void (*hiw_thread_fn)(hiw_thread*);
@@ -136,9 +138,6 @@ HIW_PUBLIC bool hiw_thread_start(hiw_thread* t);
  * @param t The thread we want to destroy
  */
 HIW_PUBLIC void hiw_thread_delete(hiw_thread* t);
-
-typedef struct hiw_thread_pool_config hiw_thread_pool_config;
-typedef struct hiw_thread_pool hiw_thread_pool;
 
 /**
  * @brief thread pool configuration

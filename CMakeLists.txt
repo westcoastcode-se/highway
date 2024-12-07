@@ -127,7 +127,7 @@ add_executable(examples_static
 )
 target_include_directories(examples_static PUBLIC core/include)
 target_include_directories(examples_static PUBLIC servlet/include)
-target_link_libraries(examples_static PRIVATE common highway highway_servlet statically_link ${SOCKET_LIBRARIES})
+target_link_libraries(examples_static PRIVATE common highway highway_servlet highway_boot statically_link ${SOCKET_LIBRARIES})
 
 #
 # Simple Json REST service using Highway Boot
@@ -150,4 +150,4 @@ set_property(TARGET examples_jc PROPERTY CXX_STANDARD 23)
 target_include_directories(examples_jc PUBLIC core/include)
 target_include_directories(examples_jc PUBLIC servlet/include)
 target_include_directories(examples_jc PUBLIC boot/include)
-target_link_libraries(examples_jc PRIVATE common common_cpp statically_link highway highway_servlet highway_boot ${SOCKET_LIBRARIES})
+target_link_libraries(examples_jc PRIVATE common common_cpp highway highway_servlet highway_boot statically_link ${SOCKET_LIBRARIES})

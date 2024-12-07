@@ -3,8 +3,7 @@
 // See the LICENSE file in the project root for license terms
 //
 
-#include "highway.h"
-#include "hiw_servlet.h"
+#include <hiw_boot.h>
 #include "static_cache.h"
 
 #include <string.h>
@@ -24,7 +23,7 @@ void stop_server_on_signal(int ignored)
 	}
 }
 
-void serve_cached_content(hiw_request* req, hiw_response* resp)
+void on_request(hiw_request* const req, hiw_response* const resp)
 {
 	for (int i = 0; i < cache.content_count; ++i)
 	{
@@ -45,63 +44,14 @@ void serve_cached_content(hiw_request* req, hiw_response* resp)
 	hiw_response_write_body_raw(resp, "could not find resource", 23);
 }
 
-int start(hiw_string data_dir, int num_threads, int read_timeout, int write_timeout)
-{
-	log_infof("starting static content server from '%.*s' with num_threads=%d, read_timeout=%d, write_timeout=%d",
-			  data_dir.length, data_dir.begin, num_threads, read_timeout, write_timeout);
-
-	if (!static_cache_init(&cache, data_dir))
-	{
-		log_error("failed to initialize cache");
-		return 1;
-	}
-
-	if (!hiw_init(hiw_init_config_default))
-		return 0;
-
-	// start the server
-	hiw_server_config server_config = hiw_server_config_default;
-	server_config.socket_config.read_timeout = read_timeout;
-	server_config.socket_config.write_timeout = write_timeout;
-	server = hiw_server_new(&server_config);
-	if (server == NULL)
-	{
-		log_error("failed to initialize server");
-		goto end_start;
-	}
-
-	// Start the server socket
-	hiw_server_start(server);
-	hiw_servlet servlet = {};
-	hiw_servlet_init(&servlet, server);
-	servlet.config.num_threads = num_threads;
-	hiw_servlet_set_func(&servlet, serve_cached_content);
-	hiw_servlet_start(&servlet);
-
-	// Release servlet resources
-	hiw_servlet_release(&servlet);
-
-	// Server ownership is given to the servlet. It will be responsible for
-	// cleaning upp it's memory
-	server = NULL;
-
-end_start:
-	hiw_release();
-	return 0;
-}
-
-int main(int argc, char** argv)
+int hiw_boot_init(hiw_boot_config* config)
 {
 	signal(SIGINT, stop_server_on_signal);
 
 	hiw_string data_dir = hiw_string_const("data");
-	int num_threads = 8;
-	int read_timeout = 5000;
-	int write_timeout = 5000;
-
-	if (argc > 1)
+	if (config->argc > 1)
 	{
-		if (hiw_string_cmpc(hiw_string_const("--help"), argv[1], (int)strlen(argv[1])))
+		if (hiw_string_cmpc(hiw_string_const("--help"), config->argv[1], (int)strlen(config->argv[1])))
 		{
 			fprintf(stdout, "Usage: static [data-dir] [max-threads] [read-timeout] [write-timeout]\n");
 			fprintf(stdout, "\n");
@@ -113,24 +63,24 @@ int main(int argc, char** argv)
 			return 0;
 		}
 
-		data_dir.begin = argv[1];
-		data_dir.length = (int)strlen(argv[1]);
+		data_dir.begin = config->argv[1];
+		data_dir.length = (int)strlen(config->argv[1]);
 	}
+	if (config->argc > 2)
+		config->servlet_config.num_accept_threads = (int)strtol(config->argv[2], NULL, 10);
+	if (config->argc > 3)
+		config->server_config.socket_config.read_timeout = (int)strtol(config->argv[3], NULL, 10);
+	if (config->argc > 4)
+		config->server_config.socket_config.write_timeout = (int)strtol(config->argv[4], NULL, 10);
+	config->servlet_func = on_request;
 
-	if (argc > 2)
+	if (!static_cache_init(&cache, data_dir))
 	{
-		num_threads = (int)strtol(argv[2], NULL, 10);
+		log_error("failed to initialize cache");
+		return 2;
 	}
 
-	if (argc > 3)
-	{
-		read_timeout = (int)strtol(argv[3], NULL, 10);
-	}
-
-	if (argc > 4)
-	{
-		write_timeout = (int)strtol(argv[4], NULL, 10);
-	}
-
-	return start(data_dir, num_threads, read_timeout, write_timeout);
+	const int ret = hiw_boot_start(config);
+	static_cache_release(&cache);
+	return ret;
 }

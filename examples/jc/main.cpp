@@ -236,7 +236,7 @@ void on_request(hiw_request* const req, hiw_response* const resp)
 	hiw_response_set_status_code(resp, 404);
 }
 
-void hiw_boot_init(hiw_boot_config* config)
+int hiw_boot_init(hiw_boot_config* config)
 {
 	string_view data_dir("data");
 	if (config->argc > 1)
@@ -248,7 +248,7 @@ void hiw_boot_init(hiw_boot_config* config)
 			fprintf(stdout,
 					"\tdata-dir - is the path to the data directory where the json data is saved. Default: 'data'\n");
 			fprintf(stdout, "\n");
-			return;
+			return 2;
 		}
 
 		data_dir = string_view(config->argv[1], (int)strlen(config->argv[1]));
@@ -261,5 +261,5 @@ void hiw_boot_init(hiw_boot_config* config)
 	config->userdata = &storage;
 
 	// Start
-	hiw_boot_start(config);
+	return hiw_boot_start(config);
 }

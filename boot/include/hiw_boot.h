@@ -54,14 +54,15 @@ typedef struct hiw_boot_config hiw_boot_config;
 /**
  * @brief Method that's responsible for initializing the Highway Boot Framework
  * @param config where to put the configuration
+ * @return the return code. 0 if everything was okay.
  */
-HIW_PUBLIC extern void hiw_boot_init(hiw_boot_config* config);
+HIW_PUBLIC extern int hiw_boot_init(hiw_boot_config* config);
 
 /**
  * @brief Start the highway boot application
  * @param config The configuration used
  */
-HIW_PUBLIC extern void hiw_boot_start(const hiw_boot_config* config);
+HIW_PUBLIC extern int hiw_boot_start(const hiw_boot_config* config);
 
 /**
  * @return The user data associated with the Highway Boot.

@@ -124,7 +124,7 @@ struct HIW_PUBLIC hiw_filter_chain
 struct HIW_PUBLIC hiw_servlet_config
 {
 	// number of threads
-	int num_threads;
+	int num_accept_threads;
 
 	// Generic global user-data
 	void* userdata;
@@ -133,11 +133,11 @@ struct HIW_PUBLIC hiw_servlet_config
 typedef struct hiw_servlet_config hiw_servlet_config;
 
 // the default port
-#define HIW_SERVLET_DEFAULT_NUM_THREADS (8)
+#define HIW_SERVLET_DEFAULT_NUM_ACCEPT_THREADS (8)
 
 // default configuration
 #define hiw_servlet_config_default                                                                                     \
-	(hiw_servlet_config) { .num_threads = HIW_SERVLET_DEFAULT_NUM_THREADS, .userdata = NULL }
+	(hiw_servlet_config) { .num_accept_threads = HIW_SERVLET_DEFAULT_NUM_ACCEPT_THREADS, .userdata = NULL }
 
 typedef struct hiw_servlet_thread hiw_servlet_thread;
 
@@ -201,16 +201,6 @@ typedef enum hiw_servlet_error hiw_servlet_error;
 HIW_PUBLIC extern hiw_servlet* hiw_servlet_new(hiw_server* server);
 
 /**
- * Create a new highway servlet. You can also use hiw_server_init if you already have
- * memory allocated for the server.
- *
- * @param s The servlet we want to initialize
- * @param server The server we want to use for accepting incoming connections
- * @return same value as s
- */
-HIW_PUBLIC extern hiw_servlet* hiw_servlet_init(hiw_servlet* s, hiw_server* server);
-
-/**
  * Delete the memory allocated for a servlet
  *
  * @param s the servlet
@@ -245,9 +235,10 @@ HIW_PUBLIC extern void hiw_servlet_set_starter_func(hiw_servlet* s, hiw_servlet_
  * Start the servlet
  *
  * @param s the servlet
+ * @param config
  * @return FALSE if the start sequence failed
  */
-HIW_PUBLIC extern hiw_servlet_error hiw_servlet_start(hiw_servlet* s);
+HIW_PUBLIC extern hiw_servlet_error hiw_servlet_start(hiw_servlet* s, const hiw_servlet_config* config);
 
 /**
  * Release a servlets internal resources
@@ -257,9 +248,10 @@ HIW_PUBLIC extern hiw_servlet_error hiw_servlet_start(hiw_servlet* s);
 HIW_PUBLIC extern void hiw_servlet_release(hiw_servlet* s);
 
 /**
- * Get the user-data for the current filter in the filter chain
+ * Get the user-data from the supplied filter in a filter chain
  *
- * @param filter
+ * @param filter the filter
+ * @return user data associated with the supplied filter
  */
 HIW_PUBLIC extern void* hiw_filter_get_data(const hiw_filter_chain* filter);
 

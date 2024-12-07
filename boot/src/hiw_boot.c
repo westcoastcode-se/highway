@@ -47,7 +47,7 @@ void hiw_boot_signal(int sig)
 
 void hiw_boot_servlet_start_default(hiw_servlet_thread* st) { hiw_servlet_start_filter_chain(st); }
 
-void hiw_boot_start(const hiw_boot_config* const config)
+int hiw_boot_start(const hiw_boot_config* const config)
 {
 	// Create the server. Ownership of the server is given to the servlet after it's started up, so
 	// we don't have to clean it up
@@ -55,7 +55,7 @@ void hiw_boot_start(const hiw_boot_config* const config)
 	if (hiw_app_state.server == NULL)
 	{
 		log_error("failed to initialize highway server");
-		return;
+		return 1;
 	}
 
 	// Set the user-data
@@ -68,18 +68,19 @@ void hiw_boot_start(const hiw_boot_config* const config)
 		hiw_server_delete(hiw_app_state.server);
 		hiw_app_state.server = NULL;
 		log_error("failed to start highway server");
-		return;
+		return 1;
 	}
 
 	// Start the servlet
-	hiw_servlet servlet = {.config = config->servlet_config};
-	hiw_servlet_init(&servlet, hiw_app_state.server);
-	hiw_servlet_set_starter_func(&servlet, hiw_boot_on_servlet_start);
-	hiw_servlet_set_func(&servlet, hiw_boot_on_request);
-	hiw_servlet_start(&servlet);
+	hiw_servlet* const servlet = hiw_servlet_new(hiw_app_state.server);
+	hiw_servlet_set_starter_func(servlet, hiw_boot_on_servlet_start);
+	hiw_servlet_set_func(servlet, hiw_boot_on_request);
+	hiw_servlet_start(servlet, &config->servlet_config);
 
 	// Release servlet resources
-	hiw_servlet_release(&servlet);
+	hiw_servlet_delete(servlet);
+
+	return 0;
 }
 
 void* hiw_boot_get_userdata()
@@ -93,7 +94,7 @@ void* hiw_boot_get_userdata()
 /**
  * Pre-start phase
  */
-void hiw_boot_pre_start(int argc, char** argv)
+int hiw_boot_pre_start(int argc, char** argv)
 {
 	// load the configuration
 	hiw_app_state = (struct hiw_boot_state){.server = NULL,
@@ -105,15 +106,16 @@ void hiw_boot_pre_start(int argc, char** argv)
 													   .userdata = NULL,
 													   .argc = argc,
 													   .argv = argv}};
-	hiw_boot_init(&hiw_app_state.config);
+	const int ret = hiw_boot_init(&hiw_app_state.config);
+	return ret;
 }
 
-int main(int argc, char** argv)
+int main(const int argc, char** argv)
 {
 	signal(SIGINT, hiw_boot_signal);
 	if (!hiw_init(hiw_init_config_default))
 		return 1;
-	hiw_boot_pre_start(argc, argv);
+	const int ret = hiw_boot_pre_start(argc, argv);
 	hiw_release();
-	return 0;
+	return ret;
 }
