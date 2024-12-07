@@ -8,10 +8,13 @@
 #include <assert.h>
 #include <hiw_thread.h>
 
-struct hiw_internal_server
+/**
+ * Server instance
+ */
+struct hiw_server
 {
-	// The public implementation
-	hiw_server pub;
+	// Configuration
+	hiw_server_config config;
 
 	// Server socket
 	SOCKET socket;
@@ -23,12 +26,13 @@ struct hiw_internal_server
 	void* userdata;
 };
 
-typedef struct hiw_internal_server hiw_internal_server;
-
-struct hiw_internal_client
+/**
+ * Client instance
+ */
+struct hiw_client
 {
-	// The public implementation
-	hiw_client pub;
+	// will be non-zero if an error has occurred
+	int error;
 
 	// client socket
 	SOCKET socket;
@@ -40,18 +44,16 @@ struct hiw_internal_client
 	char address[INET6_ADDRSTRLEN];
 };
 
-typedef struct hiw_internal_client hiw_internal_client;
-
 bool hiw_server_is_error(hiw_server_error err) { return err != HIW_SERVER_ERROR_SUCCESS; }
 
 hiw_server* hiw_server_new(const hiw_server_config* config)
 {
-	hiw_internal_server* const impl = hiw_malloc(sizeof(hiw_internal_server));
-	impl->pub.config = *config;
+	hiw_server* const impl = hiw_malloc(sizeof(hiw_server));
+	impl->config = *config;
 	impl->userdata = NULL;
 	impl->socket = INVALID_SOCKET;
 	impl->running = false;
-	return &impl->pub;
+	return impl;
 }
 
 hiw_server_error hiw_server_start(hiw_server* s)
@@ -59,93 +61,86 @@ hiw_server_error hiw_server_start(hiw_server* s)
 	assert(s != NULL && "expected 's' to exist");
 	if (s == NULL)
 		return HIW_SERVER_ERROR_MEMORY;
-	hiw_internal_server* const impl = (hiw_internal_server*)s;
 
 	// Start listen for incoming requests using the configuration
 	hiw_socket_error err;
-	impl->socket = hiw_socket_listen(&s->config.socket_config, &err);
+	s->socket = hiw_socket_listen(&s->config.socket_config, &err);
 	if (err != HIW_SOCKET_ERROR_SUCCESS)
 	{
 		log_error("failed to start highway server");
 		return HIW_SERVER_ERROR_SOCKET;
 	}
-	impl->running = true;
+	s->running = true;
 	return HIW_SERVER_ERROR_SUCCESS;
 }
 
-void* hiw_server_get_userdata(hiw_server* s)
+void* hiw_server_get_userdata(const hiw_server* const s)
 {
 	assert(s != NULL && "expected 's' to exist");
 	if (s == NULL)
 		return NULL;
-	hiw_internal_server* const impl = (hiw_internal_server*)s;
-	return impl->userdata;
+	return s->userdata;
 }
 
-hiw_server_error hiw_server_set_userdata(hiw_server* s, void* userdata)
+hiw_server_error hiw_server_set_userdata(hiw_server* const s, void* userdata)
 {
 	assert(s != NULL && "expected 's' to exist");
 	if (s == NULL)
 		return HIW_SERVER_ERROR_MEMORY;
-	hiw_internal_server* const impl = (hiw_internal_server*)s;
-	if (impl->socket != INVALID_SOCKET)
+	if (s->socket != INVALID_SOCKET)
 		return HIW_SERVER_ERROR_RUNNING;
-	impl->userdata = userdata;
+	s->userdata = userdata;
 	return HIW_SERVER_ERROR_SUCCESS;
 }
 
-void hiw_server_stop(hiw_server* s)
+void hiw_server_stop(hiw_server* const s)
 {
 	assert(s != NULL && "expected 's' to exist");
 	if (s == NULL)
 		return;
-	hiw_internal_server* const impl = (hiw_internal_server*)s;
-	if (impl->running)
+	if (s->running)
 	{
-		impl->running = false;
-		if (impl->socket != INVALID_SOCKET)
+		s->running = false;
+		if (s->socket != INVALID_SOCKET)
 		{
 			log_debugf("hiw_server(%p) closing socket", s);
-			hiw_socket_close(impl->socket);
-			impl->socket = INVALID_SOCKET;
+			hiw_socket_close(s->socket);
+			s->socket = INVALID_SOCKET;
 		}
 	}
 	log_debugf("hiw_server(%p) highway server stopped", s);
 }
 
-void hiw_server_delete(hiw_server* s)
+void hiw_server_delete(hiw_server* const s)
 {
 	assert(s != NULL && "expected 's' to exist");
 	if (s == NULL)
 		return;
-	hiw_internal_server* const impl = (hiw_internal_server*)s;
-	assert(impl->running == false &&
+	assert(s->running == false &&
 		   "it is recommended that you stop the server before deleting it's internal resources");
-	if (impl->socket != INVALID_SOCKET)
+	if (s->socket != INVALID_SOCKET)
 	{
 		log_debugf("hiw_server(%p) closing socket", s);
-		hiw_socket_close(impl->socket);
-		impl->socket = INVALID_SOCKET;
+		hiw_socket_close(s->socket);
+		s->socket = INVALID_SOCKET;
 	}
-	free(impl);
+	free(s);
 }
 
-bool hiw_server_is_running(hiw_server* s)
+bool hiw_server_is_running(hiw_server* const s)
 {
 	assert(s != NULL && "expected 's' to exist");
 	if (s == NULL)
 		return false;
-	hiw_internal_server* const impl = (hiw_internal_server*)s;
-	return impl->running;
+	return s->running;
 }
 
-hiw_client* hiw_server_accept(hiw_server* s)
+hiw_client* hiw_server_accept(hiw_server* const s)
 {
 	assert(s != NULL && "expected 's' to exist");
 	if (s == NULL)
 		return NULL;
-	hiw_internal_server* const impl = (hiw_internal_server*)s;
-	if (impl->running == false)
+	if (s->running == false)
 	{
 		log_error("failed to accept client: server is shutting down");
 		return NULL;
@@ -153,20 +148,20 @@ hiw_client* hiw_server_accept(hiw_server* s)
 
 	log_debugf("server(%p) accepting a new client", s);
 	hiw_socket_error err = HIW_SOCKET_ERROR_SUCCESS;
-	const SOCKET client_socket = hiw_socket_accept(impl->socket, &impl->pub.config.socket_config, &err);
+	const SOCKET client_socket = hiw_socket_accept(s->socket, &s->config.socket_config, &err);
 	if (client_socket == INVALID_SOCKET)
 	{
 		log_debugf("hiw_server(%p) failed to accept socket", s);
 		return NULL;
 	}
 
-	hiw_internal_client* const client = hiw_malloc(sizeof(hiw_internal_client));
+	hiw_client* const client = hiw_malloc(sizeof(hiw_client));
 	client->socket = client_socket;
-	client->ip_version = impl->pub.config.socket_config.ip_version;
-	client->pub.error = 0;
+	client->ip_version = s->config.socket_config.ip_version;
+	client->error = 0;
 
 	// get the actual IP address from the socket
-	if (impl->pub.config.socket_config.ip_version == HIW_SOCKET_IPV4)
+	if (s->config.socket_config.ip_version == HIW_SOCKET_IPV4)
 	{
 		struct sockaddr_in addr = {};
 		socklen_t len = sizeof(addr);
@@ -181,7 +176,7 @@ hiw_client* hiw_server_accept(hiw_server* s)
 		inet_ntop(AF_INET6, &addr.sin6_addr, client->address, sizeof(client->address));
 	}
 
-	return &client->pub;
+	return client;
 }
 
 const char* hiw_client_get_address(hiw_client* c)
@@ -189,8 +184,7 @@ const char* hiw_client_get_address(hiw_client* c)
 	assert(c != NULL && "expected 'c' to exist");
 	if (c == NULL)
 		return "";
-	hiw_internal_client* const impl = (hiw_internal_client*)c;
-	return impl->address;
+	return c->address;
 }
 
 void hiw_client_disconnect(hiw_client* c)
@@ -198,11 +192,10 @@ void hiw_client_disconnect(hiw_client* c)
 	assert(c != NULL && "expected 'c' to exist");
 	if (c == NULL)
 		return;
-	hiw_internal_client* const impl = (hiw_internal_client*)c;
-	if (impl->socket != INVALID_SOCKET)
+	if (c->socket != INVALID_SOCKET)
 	{
-		hiw_socket_close(impl->socket);
-		impl->socket = INVALID_SOCKET;
+		hiw_socket_close(c->socket);
+		c->socket = INVALID_SOCKET;
 	}
 }
 
@@ -211,13 +204,12 @@ void hiw_client_delete(hiw_client* c)
 	assert(c != NULL && "expected 'c' to exist");
 	if (c == NULL)
 		return;
-	hiw_internal_client* const impl = (hiw_internal_client*)c;
-	if (impl->socket != INVALID_SOCKET)
+	if (c->socket != INVALID_SOCKET)
 	{
-		hiw_socket_close(impl->socket);
-		impl->socket = INVALID_SOCKET;
+		hiw_socket_close(c->socket);
+		c->socket = INVALID_SOCKET;
 	}
-	free(impl);
+	free(c);
 }
 
 int hiw_client_recv(hiw_client* c, char* const dest, const int len)
@@ -225,8 +217,7 @@ int hiw_client_recv(hiw_client* c, char* const dest, const int len)
 	assert(c != NULL && "expected 'c' to exist");
 	if (c == NULL)
 		return -1;
-	hiw_internal_client* const impl = (hiw_internal_client*)c;
-	return hiw_socket_recv(impl->socket, dest, len);
+	return hiw_socket_recv(c->socket, dest, len);
 }
 
 int hiw_client_send(hiw_client* c, const char* const src, const int len)
@@ -234,8 +225,7 @@ int hiw_client_send(hiw_client* c, const char* const src, const int len)
 	assert(c != NULL && "expected 'c' to exist");
 	if (c == NULL)
 		return -1;
-	hiw_internal_client* const impl = (hiw_internal_client*)c;
-	return hiw_socket_send(impl->socket, src, len);
+	return hiw_socket_send(c->socket, src, len);
 }
 
 int hiw_client_sendall(hiw_client* c, const char* src, int len)
@@ -243,12 +233,10 @@ int hiw_client_sendall(hiw_client* c, const char* src, int len)
 	assert(c != NULL && "expected 'c' to exist");
 	if (c == NULL)
 		return -1;
-	hiw_internal_client* const impl = (hiw_internal_client*)c;
-
 	int bytes_left = len;
 	while (bytes_left > 0)
 	{
-		const int ret = hiw_socket_send(impl->socket, src, bytes_left);
+		const int ret = hiw_socket_send(c->socket, src, bytes_left);
 		if (ret <= 0)
 			return -1;
 		bytes_left -= ret;

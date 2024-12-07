@@ -19,22 +19,9 @@ struct HIW_PUBLIC hiw_server_config
 	hiw_socket_config socket_config;
 };
 
-typedef struct hiw_server_config hiw_server_config;
-
 // Default configuration for a highway server
 #define hiw_server_config_default                                                                                      \
 	(hiw_server_config) { .socket_config = hiw_socket_config_default }
-
-/**
- * Server instance
- */
-struct HIW_PUBLIC hiw_server
-{
-	// Configuration
-	hiw_server_config config;
-};
-
-typedef struct hiw_server hiw_server;
 
 enum HIW_PUBLIC hiw_server_error
 {
@@ -52,16 +39,8 @@ enum HIW_PUBLIC hiw_server_error
 };
 
 typedef enum hiw_server_error hiw_server_error;
-
-/**
- * Client instance
- */
-struct HIW_PUBLIC hiw_client
-{
-	// will be non-zero if an error has occurred
-	int error;
-};
-
+typedef struct hiw_server_config hiw_server_config;
+typedef struct hiw_server hiw_server;
 typedef struct hiw_client hiw_client;
 
 /**
@@ -70,11 +49,13 @@ typedef struct hiw_client hiw_client;
 HIW_PUBLIC extern bool hiw_server_is_error(hiw_server_error err);
 
 /**
- * @return A stopped highway server
+ * @return A highway server thats not running
  */
 HIW_PUBLIC extern hiw_server* hiw_server_new(const hiw_server_config* config);
 
 /**
+ * Start the supplier server
+ *
  * @return a potential error
  */
 HIW_PUBLIC hiw_server_error hiw_server_start(hiw_server* s);
@@ -82,7 +63,7 @@ HIW_PUBLIC hiw_server_error hiw_server_start(hiw_server* s);
 /**
  * @return user-data associated with the server
  */
-HIW_PUBLIC void* hiw_server_get_userdata(hiw_server* s);
+HIW_PUBLIC void* hiw_server_get_userdata(const hiw_server* s);
 
 /**
  * @param s the server
