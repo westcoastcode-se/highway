@@ -134,6 +134,8 @@ struct hiw_internal_response
 
 typedef struct hiw_internal_response hiw_internal_response;
 
+void hiw_servlet_start_func_default(hiw_servlet_thread* st);
+
 bool hiw_internal_response_error(hiw_internal_response* r)
 {
 	r->flags |= hiw_internal_response_flag_error;
@@ -225,7 +227,7 @@ hiw_servlet* hiw_servlet_new(hiw_server* const server)
 	hiw_servlet* const s = hiw_malloc(sizeof(hiw_servlet));
 	s->config = hiw_servlet_config_default;
 	s->filter_chain.filters = NULL;
-	s->start_func = NULL;
+	s->start_func = hiw_servlet_start_func_default;
 	s->server = server;
 	s->flags = hiw_servlet_flags_server_owner;
 	return s;
@@ -300,6 +302,8 @@ void hiw_servlet_set_starter_func(hiw_servlet* s, hiw_servlet_start_fn func)
 	assert(s != NULL && "expected 's' to exist");
 	if (s == NULL)
 		return;
+	if (func == NULL)
+		func = hiw_servlet_start_func_default;
 	s->start_func = func;
 }
 
@@ -319,19 +323,17 @@ void hiw_servlet_start_func_default(hiw_servlet_thread* st)
 void hiw_servlet_func(hiw_thread* t)
 {
 	log_debugf("hiw_thread(%p) servlet thread starting", t);
-
-	// The servlet thread
 	hiw_servlet_thread* const st = hiw_thread_get_userdata(t);
-
-	// Start the actual servlet
-	if (st->servlet->start_func != NULL)
-		st->servlet->start_func(st);
-	else
-		hiw_servlet_start_func_default(st);
-
+	st->servlet->start_func(st);
 	log_debugf("hiw_thread(%p) servlet thread done", t);
 }
 
+/**
+ * Create a new servlet thread
+ *
+ * @param s The servlet
+ * @return a new servlet thread instance
+ */
 hiw_servlet_thread* hiw_servlet_thread_new(hiw_servlet* const s)
 {
 	hiw_servlet_thread* const st = hiw_malloc(sizeof(hiw_servlet_thread));
@@ -343,26 +345,48 @@ hiw_servlet_thread* hiw_servlet_thread_new(hiw_servlet* const s)
 	return st;
 }
 
+/**
+ * Start all servlet threads
+ *
+ * @param s The servlet
+ * @return true if the servlet started successfully
+ */
+bool hiw_servlet_start_threads(hiw_servlet* const s)
+{
+	hiw_servlet_thread* current_thread = s->threads;
+	while (current_thread != NULL)
+	{
+		log_infof("hiw_servlet(%p) is starting thread", s);
+		if (!hiw_thread_start(current_thread->thread))
+		{
+			log_errorf("hiw_servlet(%p) could not start hiw_thread(%p)", s, current_thread->thread);
+			return false;
+		}
+		current_thread = current_thread->next;
+	}
+	log_infof("hiw_servlet(%p) spawned %d threads", s, s->config.num_accept_threads);
+	return true;
+}
+
 hiw_servlet_error hiw_servlet_start(hiw_servlet* const s, const hiw_servlet_config* config)
 {
 	assert(s != NULL && "expected 's' to exist");
 	if (s == NULL)
-		return HIW_SERVLET_ERROR_NULL;
+		return HIW_SERVLET_ERROR_INVALID_ARGUMENT;
 	if (config != NULL)
 		s->config = *config;
 
 	log_infof("hiw_servlet(%p) is spawning %d threads", s, s->config.num_accept_threads);
 
 	// Initialize all servlet threads
-	hiw_servlet_thread* first = NULL;
 	hiw_servlet_thread* last = NULL;
 	for (int i = 0; i < s->config.num_accept_threads; ++i)
 	{
 		hiw_servlet_thread* const st = hiw_servlet_thread_new(s);
 
-		if (first == NULL)
+		if (s->threads == NULL)
 		{
-			first = last = st;
+			s->threads = last = st;
 		}
 		else
 		{
@@ -370,20 +394,9 @@ hiw_servlet_error hiw_servlet_start(hiw_servlet* const s, const hiw_servlet_conf
 			last = st;
 		}
 	}
-	s->threads = first;
 
-	// Start all servlet threads
-	while (first != NULL)
-	{
-		log_infof("hiw_servlet(%p) is starting thread", s);
-		if (!hiw_thread_start(first->thread))
-		{
-			log_errorf("hiw_servlet(%p) could not start hiw_thread(%p)", s, first->thread);
-			// TODO: Cleanup memory?!!
-		}
-		first = first->next;
-	}
-	log_infof("hiw_servlet(%p) spawned %d threads", s, s->config.num_accept_threads);
+	if (!hiw_servlet_start_threads(s))
+		return HIW_SERVLET_ERROR_THREADS;
 
 	// Start the main thread servlet. It blocks in hiw_thread_start until the servlet is shutting down
 	hiw_servlet_thread main_servlet_thread = {

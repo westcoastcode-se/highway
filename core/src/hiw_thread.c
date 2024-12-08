@@ -245,7 +245,6 @@ void* hiw_thread_context_find(const hiw_thread* const t, const void* key)
 
 bool hiw_thread_start(hiw_thread* const t)
 {
-	assert(t != NULL && "expected 't' to exist");
 	if (t == NULL)
 		return false;
 	if (t->started)

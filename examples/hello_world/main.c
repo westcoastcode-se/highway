@@ -47,8 +47,7 @@ int main()
 	if (server)
 	{
 		// Start the server socket
-		hiw_server_error err = hiw_server_start(server);
-		if (err != HIW_SERVER_ERROR_SUCCESS)
+		if (hiw_server_is_error(hiw_server_start(server)))
 		{
 			hiw_server_delete(server);
 			server = NULL;

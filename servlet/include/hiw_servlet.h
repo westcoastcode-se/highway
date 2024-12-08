@@ -156,8 +156,11 @@ enum HIW_PUBLIC hiw_servlet_error
 	// No error
 	HIW_SERVLET_ERROR_SUCCESS = 0,
 
-	// No servlet
-	HIW_SERVLET_ERROR_NULL,
+	// One or more arguments are invalid
+	HIW_SERVLET_ERROR_INVALID_ARGUMENT = 1,
+
+	// An error occurred while starting the servlet threads
+	HIW_SERVLET_ERROR_THREADS = 2
 };
 
 typedef enum hiw_servlet_error hiw_servlet_error;
