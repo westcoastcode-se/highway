@@ -160,8 +160,6 @@ bool hiw_internal_response_out_of_memory(hiw_internal_response* r)
  *
  * @param req
  * @param thread
- * @param buf
- * @param len
  */
 void hiw_internal_request_init(hiw_internal_request* const req, hiw_servlet_thread* const thread)
 {
@@ -176,8 +174,6 @@ void hiw_internal_request_init(hiw_internal_request* const req, hiw_servlet_thre
  *
  * @param resp
  * @param thread
- * @param buf
- * @param len
  */
 void hiw_internal_response_init(hiw_internal_response* const resp, hiw_servlet_thread* const thread)
 {
@@ -711,9 +707,6 @@ bool hiw_response_flush_headers(hiw_internal_response* const resp)
 void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 {
 	log_debugf("hiw_thread(%p) start listening to incoming requests in thread", st->thread);
-
-	// Memory used for parsing header data, both for the request and the response
-	char response_stack_memory[HIW_MAX_HEADER_SIZE];
 
 	hiw_internal_request request;
 	hiw_internal_request_init(&request, st);
