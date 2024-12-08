@@ -277,21 +277,27 @@ HIW_PUBLIC extern void hiw_memory_release(hiw_memory* m);
  * @brief Check if the supplied memory buffer is allowed to resize it's internal memory
  * @param m The memory buffer
  */
-HIW_PUBLIC extern bool hiw_memory_resize_enabled(hiw_memory* m);
+HIW_PUBLIC extern bool hiw_memory_resize_enabled(const hiw_memory* m);
+
+/**
+ * @brief Set that this memory buffer should no longer allow resizing its internal buffer
+ * @param m The memory buffer
+ */
+HIW_PUBLIC extern void hiw_memory_resize_disabled(hiw_memory* m);
 
 /**
  * @brief Get how many bytes is written to the supplied hiw_memory instance
  * @param m The hiw_memory instance
  * @return The number of bytes
  */
-HIW_PUBLIC extern int hiw_memory_size(hiw_memory* m);
+HIW_PUBLIC extern int hiw_memory_size(const hiw_memory* m);
 
 /**
  * @brief Get the memory capacity, in bytes, of the hiw_memory instance
  * @param mem The hiw_memory instance
  * @return The capacity in bytes
  */
-HIW_PUBLIC extern int hiw_memory_capacity(hiw_memory* m);
+HIW_PUBLIC extern int hiw_memory_capacity(const hiw_memory* m);
 
 /**
  * @brief Reset the underlying memory for reuse

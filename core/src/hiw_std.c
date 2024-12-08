@@ -307,11 +307,16 @@ void hiw_memory_release(hiw_memory* mem)
 	}
 }
 
-bool hiw_memory_resize_enabled(hiw_memory* m) { return m->resize_bytes <= 0; }
+bool hiw_memory_resize_enabled(const hiw_memory* const m) { return m->resize_bytes <= 0; }
 
-int hiw_memory_size(hiw_memory* const m) { return (int)(m->pos - m->ptr); }
+void hiw_memory_resize_disabled(hiw_memory* const m)
+{
+	m->resize_bytes = 0;
+}
 
-int hiw_memory_capacity(hiw_memory* const m) { return (int)(m->end - m->ptr); }
+int hiw_memory_size(const hiw_memory* const m) { return (int)(m->pos - m->ptr); }
+
+int hiw_memory_capacity(const hiw_memory* const m) { return (int)(m->end - m->ptr); }
 
 bool hiw_memory_resize(hiw_memory* const m, const int required_bytes)
 {
