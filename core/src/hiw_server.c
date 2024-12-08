@@ -31,9 +31,6 @@ struct hiw_server
  */
 struct hiw_client
 {
-	// will be non-zero if an error has occurred
-	int error;
-
 	// client socket
 	SOCKET socket;
 
@@ -116,8 +113,7 @@ void hiw_server_delete(hiw_server* const s)
 	assert(s != NULL && "expected 's' to exist");
 	if (s == NULL)
 		return;
-	assert(s->running == false &&
-		   "it is recommended that you stop the server before deleting it's internal resources");
+	assert(s->running == false && "it is recommended that you stop the server before deleting it's internal resources");
 	if (s->socket != INVALID_SOCKET)
 	{
 		log_debugf("hiw_server(%p) closing socket", s);
@@ -158,7 +154,6 @@ hiw_client* hiw_server_accept(hiw_server* const s)
 	hiw_client* const client = hiw_malloc(sizeof(hiw_client));
 	client->socket = client_socket;
 	client->ip_version = s->config.socket_config.ip_version;
-	client->error = 0;
 
 	// get the actual IP address from the socket
 	if (s->config.socket_config.ip_version == HIW_SOCKET_IPV4)
@@ -199,7 +194,7 @@ void hiw_client_disconnect(hiw_client* c)
 	}
 }
 
-void hiw_client_delete(hiw_client* c)
+void hiw_client_delete(hiw_client* const c)
 {
 	assert(c != NULL && "expected 'c' to exist");
 	if (c == NULL)
@@ -212,7 +207,7 @@ void hiw_client_delete(hiw_client* c)
 	free(c);
 }
 
-int hiw_client_recv(hiw_client* c, char* const dest, const int len)
+int hiw_client_recv(hiw_client* const c, char* const dest, const int len)
 {
 	assert(c != NULL && "expected 'c' to exist");
 	if (c == NULL)
@@ -220,7 +215,7 @@ int hiw_client_recv(hiw_client* c, char* const dest, const int len)
 	return hiw_socket_recv(c->socket, dest, len);
 }
 
-int hiw_client_send(hiw_client* c, const char* const src, const int len)
+int hiw_client_send(hiw_client* const c, const char* const src, const int len)
 {
 	assert(c != NULL && "expected 'c' to exist");
 	if (c == NULL)
@@ -228,7 +223,7 @@ int hiw_client_send(hiw_client* c, const char* const src, const int len)
 	return hiw_socket_send(c->socket, src, len);
 }
 
-int hiw_client_sendall(hiw_client* c, const char* src, int len)
+int hiw_client_sendall(hiw_client* const c, const char* src, int len)
 {
 	assert(c != NULL && "expected 'c' to exist");
 	if (c == NULL)

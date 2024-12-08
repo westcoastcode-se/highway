@@ -121,6 +121,11 @@ HIW_PUBLIC extern void hiw_client_delete(hiw_client* c);
 
 /**
  * Receive data from the supplier client
+ *
+ * @param c The client
+ * @param dest Where to put the received data into
+ * @param len The length that we want to read and put into the destination buffer
+ * @return the number of bytes put into the destination buffer
  */
 HIW_PUBLIC extern int hiw_client_recv(hiw_client* c, char* dest, int len);
 
