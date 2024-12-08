@@ -39,6 +39,13 @@ bool critical_section_wait(const PCONDITION_VARIABLE cond, const PCRITICAL_SECTI
 	return SleepConditionVariableCS(cond, mutex, millis);
 }
 
+typedef unsigned long long hiw_tick_t;
+
+hiw_tick_t hiw_get_tick_count()
+{
+	return GetTickCount64();
+}
+
 #define critical_section_notify(cond) WakeConditionVariable(cond)
 #define critical_section_broadcast(cond) WakeAllConditionVariable(cond)
 #else
@@ -57,6 +64,14 @@ bool critical_section_wait(pthread_cond_t* cond, pthread_mutex_t* mutex, const i
 	ts.tv_sec += millis / 1000;
 	ts.tv_nsec += (millis % 1000) * 1000000;
 	return pthread_cond_timedwait(cond, mutex, &ts);
+}
+
+typedef unsigned long long hiw_tick_t;
+
+hiw_tick_t hiw_get_tick_count()
+{
+	struct timespec ts;
+	return (uint64_t)(ts.tv_nsec / 1000000) + ((uint64_t)ts.tv_sec * 1000ull);
 }
 
 #define critical_section_notify(cond) pthread_cond_signal(cond)
@@ -155,9 +170,9 @@ void hiw_thread_wait(hiw_thread* t, int wait_ms)
 	{
 		log_debugf("hiw_thread(%p) joining", t);
 		pthread_join(t->handle, NULL);
-		t->started = false;
 	}
 #endif
+	t->started = false;
 
 	log_debugf("hiw_thread(%p) stopped", t);
 }
@@ -263,8 +278,8 @@ bool hiw_thread_start(hiw_thread* const t)
 	}
 	else
 	{
-#if defined(HIW_WINDOWS)
 		t->started = true;
+#if defined(HIW_WINDOWS)
 		t->handle = (HANDLE)_beginthread(hiw_thread_entrypoint, 0, t);
 		if (t->handle == 0)
 		{
@@ -273,7 +288,6 @@ bool hiw_thread_start(hiw_thread* const t)
 			return false;
 		}
 #else
-		t->started = true;
 		const int ret = pthread_create(&t->handle, NULL, hiw_thread_entrypoint, t);
 		if (ret != 0)
 		{
@@ -294,6 +308,7 @@ void hiw_thread_delete(hiw_thread* t)
 	if (hiw_bit_test(t->flags, hiw_thread_flags_main))
 		return;
 	log_debugf("hiw_thread(%p) deleting", t);
+	// TODO: Add timeout
 	hiw_thread_wait(t, HIW_THREAD_WAIT_DEFAULT_TIMEOUT);
 	free(t);
 }
@@ -488,10 +503,7 @@ hiw_thread_pool_work* hiw_thread_pool_worker_pop_work_UNSAFE(hiw_thread_pool_wor
 /**
  * @brief a function that represents doing nothing
  */
-void hiw_thread_pool_do_nothing(hiw_thread* const t)
-{
-	hiw_thread_pool_worker_main(t);
-}
+void hiw_thread_pool_do_nothing(hiw_thread* const t) { hiw_thread_pool_worker_main(t); }
 
 /**
  * @brief function used by a thread pool worker to execute work
@@ -527,16 +539,24 @@ void hiw_thread_pool_worker_main(hiw_thread* const t)
 	while (1)
 	{
 		hiw_thread_critical_sec_enter(&worker->critical_section);
+		const bool current_running = worker->running;
 
 		// check if we should do work
-		if (worker->work_next == NULL && worker->running)
+		if (worker->work_next == NULL && current_running)
 		{
 			// TODO allow for customized timeout
 			hiw_thread_critical_sec_wait(&worker->critical_section, INFINITE);
 		}
 
-		if (!worker->running)
-			break;
+		if (!current_running)
+		{
+			// Stop running the worker logic when there's no more work.
+			if (worker->work_next == NULL)
+			{
+				hiw_thread_critical_sec_exit(&worker->critical_section);
+				break;
+			}
+		}
 
 		// get work to executed by this worker
 		hiw_thread_pool_work* const work = hiw_thread_pool_worker_pop_work_UNSAFE(worker);
@@ -589,9 +609,7 @@ void hiw_thread_pool_worker_stop(hiw_thread_pool_worker* const worker)
 		worker->running = false;
 		hiw_thread_critical_sec_notify_one(&worker->critical_section);
 		hiw_thread_critical_sec_exit(&worker->critical_section);
-
-		// TODO: Make wait timeout configurable
-		hiw_thread_wait(worker->thread, HIW_THREAD_WAIT_DEFAULT_TIMEOUT);
+		hiw_thread_wait(worker->thread, worker->pool->config.worker_timeout);
 	}
 	else
 	{
@@ -668,7 +686,7 @@ void hiw_thread_pool_delete(hiw_thread_pool* const pool)
 	free(pool);
 }
 
-void hiw_thread_pool_start(hiw_thread_pool* const pool)
+bool hiw_thread_pool_start(hiw_thread_pool* const pool)
 {
 	log_infof("hiw_thread_pool(%p) starting", pool);
 
@@ -676,10 +694,12 @@ void hiw_thread_pool_start(hiw_thread_pool* const pool)
 	while (worker != NULL)
 	{
 		worker->running = true;
-		hiw_thread_start(worker->thread);
+		if (!hiw_thread_start(worker->thread))
+			return false;
 		worker = worker->next;
 	}
 	log_infof("hiw_thread_pool(%p) started", pool);
+	return true;
 }
 
 /**
@@ -689,7 +709,8 @@ void hiw_thread_pool_start(hiw_thread_pool* const pool)
  * Please note that this function is UNSAFE, which means that you have to lock any appropriate
  * critical sections before calling this function
  */
-hiw_thread_pool_work* hiw_thread_pool_work_new_UNSAFE(hiw_thread_pool_worker* const worker, hiw_thread_fn func, void* data)
+hiw_thread_pool_work* hiw_thread_pool_work_new_UNSAFE(hiw_thread_pool_worker* const worker, hiw_thread_fn func,
+													  void* data)
 {
 	// try to get free work memory
 	hiw_thread_pool_work* work = worker->work_free;

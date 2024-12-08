@@ -17,6 +17,11 @@ extern "C" {
 #define HIW_THREAD_WAIT_DEFAULT_TIMEOUT (30000)
 #endif
 
+// Default time that a thread pool worker is allowed to process work until forcefully shutdown
+#if !defined(HIW_THREAD_WORKER_WAIT_DEFAULT_TIMEOUT)
+#define HIW_THREAD_WORKER_WAIT_DEFAULT_TIMEOUT (30000)
+#endif
+
 typedef struct hiw_thread_context hiw_thread_context;
 typedef struct hiw_thread hiw_thread;
 typedef struct hiw_thread_pool_config hiw_thread_pool_config;
@@ -156,7 +161,19 @@ struct HIW_PUBLIC hiw_thread_pool_config
 	// Function called as the thread is starting up, but before the main function is executed.
 	// Please note that you are expected to call "hiw_thread_pool_main" manually
 	hiw_thread_fn on_start;
+
+	// Timeout that a thread pool worker is allowed to process work until forcefully shutdown
+	int worker_timeout;
 };
+
+// default configuration
+#define hiw_thread_pool_config_default                                                                                 \
+	(hiw_thread_pool_config)                                                                                           \
+	{                                                                                                                  \
+		.count = 0, .max_count = 0, .allow_shrink = false, .on_start = NULL,                                           \
+		.worker_timeout = HIW_THREAD_WORKER_WAIT_DEFAULT_TIMEOUT                                                       \
+	}
+
 
 /**
  * @brief Create a new thread pool instance
@@ -175,7 +192,7 @@ extern HIW_PUBLIC void hiw_thread_pool_delete(hiw_thread_pool* pool);
  * @brief start the supplied thread pool
  * @param pool the thread pool
  */
-extern HIW_PUBLIC void hiw_thread_pool_start(hiw_thread_pool* pool);
+extern HIW_PUBLIC bool hiw_thread_pool_start(hiw_thread_pool* pool);
 
 /**
  * @brief Push new work to be executed as soon as already pushed work is done
