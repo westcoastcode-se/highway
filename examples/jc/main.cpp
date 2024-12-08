@@ -10,6 +10,7 @@
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <cstring>
 #include <string_view>
 #include <unordered_map>
 
@@ -163,15 +164,17 @@ private:
 void on_request(hiw_request* const req, hiw_response* const resp)
 {
 	const auto storage = static_cast<json_storage*>(hiw_boot_get_userdata());
-	const auto uri = string_view(req->uri.begin, req->uri.length);
+	const auto uri0 = hiw_request_get_uri(req);
+	const auto method = hiw_request_get_method(req);
+	const auto uri = string_view(uri0.begin, uri0.length);
 	try
 	{
-		if (hiw_string_cmp(req->method, hiw_string_const("GET")))
+		if (hiw_string_cmp(method, hiw_string_const("GET")))
 		{
 			const auto result = storage->get(uri, string_view());
 			if (result.empty())
 			{
-				log_warnf("could not find %.*s", req->uri.length, req->uri.begin);
+				log_warnf("could not find %.*s", uri0.length, uri0.begin);
 				hiw_response_set_status_code(resp, 404);
 				return;
 			}
@@ -183,19 +186,20 @@ void on_request(hiw_request* const req, hiw_response* const resp)
 			return;
 		}
 
-		if (hiw_string_cmp(req->method, hiw_string_const("PUT")))
+		if (hiw_string_cmp(method, hiw_string_const("PUT")))
 		{
-			if (req->content_length == 0)
+			const auto content_length = hiw_request_get_content_length(req);
+			if (content_length == 0)
 			{
-				log_warnf("request content-length is zero for %.*s", req->uri.length, req->uri.begin);
+				log_warnf("request content-length is zero for %.*s", uri0.length, uri0.begin);
 				hiw_response_set_status_code(resp, 400);
 				return;
 			}
 
 			// Read the incoming data
 			string new_data;
-			new_data.resize(req->content_length);
-			hiw_request_recv(req, const_cast<char*>(new_data.c_str()), req->content_length);
+			new_data.resize(content_length);
+			hiw_request_recv(req, const_cast<char*>(new_data.c_str()), content_length);
 
 			// add the data
 			const auto old_data = storage->add(uri, std::move(new_data));
@@ -208,12 +212,12 @@ void on_request(hiw_request* const req, hiw_response* const resp)
 			return;
 		}
 
-		if (hiw_string_cmp(req->method, hiw_string_const("DELETE")))
+		if (hiw_string_cmp(method, hiw_string_const("DELETE")))
 		{
 			const auto removed_data = storage->remove(uri);
 			if (removed_data.empty())
 			{
-				log_warnf("could not find %.*s", req->uri.length, req->uri.begin);
+				log_warnf("could not find %.*s", uri0.length, uri0.begin);
 				hiw_response_set_status_code(resp, 404);
 				return;
 			}

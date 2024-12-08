@@ -15,10 +15,11 @@ static_cache cache;
 
 void on_request(hiw_request* const req, hiw_response* const resp)
 {
+	const hiw_string uri = hiw_request_get_uri(req);
 	for (int i = 0; i < cache.content_count; ++i)
 	{
 		const static_content* const c = &cache.content[i];
-		if (hiw_string_cmp(c->uri, req->uri))
+		if (hiw_string_cmp(c->uri, uri))
 		{
 			hiw_response_set_status_code(resp, 200);
 			hiw_response_set_content_length(resp, c->length);

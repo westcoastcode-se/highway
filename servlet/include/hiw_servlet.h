@@ -59,25 +59,6 @@ struct HIW_PUBLIC hiw_headers
 };
 
 typedef struct hiw_headers hiw_headers;
-
-/**
- * A highway http request
- */
-struct HIW_PUBLIC hiw_request
-{
-	// The request method
-	hiw_string method;
-
-	// The request uri
-	hiw_string uri;
-
-	// Headers sent from the client
-	hiw_headers headers;
-
-	// content_length received from the client
-	int content_length;
-};
-
 typedef struct hiw_request hiw_request;
 typedef struct hiw_response hiw_response;
 typedef struct hiw_filter_chain hiw_filter_chain;
@@ -236,6 +217,27 @@ HIW_PUBLIC extern void hiw_servlet_start_filter_chain(hiw_servlet_thread* st);
  * @return the thread associated with the supplier request
  */
 HIW_PUBLIC extern hiw_thread* hiw_request_get_thread(hiw_request* req);
+
+/**
+ * Get the uri for the incoming request
+ *
+ * @param req the request
+ * @return the uri for the supplied request
+ */
+HIW_PUBLIC extern hiw_string hiw_request_get_uri(const hiw_request* req);
+
+/**
+ * Get the method for the incoming request
+ *
+ * @param req the request
+ * @return the method for the supplied request
+ */
+HIW_PUBLIC extern hiw_string hiw_request_get_method(const hiw_request* req);
+
+/**
+ * @return The request content length if set by the client; -1 if no content length is set
+ */
+HIW_PUBLIC extern int hiw_request_get_content_length(const hiw_request* req);
 
 /**
  * @brief Receive data from the supplier request

@@ -53,10 +53,22 @@ struct hiw_servlet_thread
 	hiw_servlet_thread* next;
 };
 
-struct hiw_internal_request
+/**
+ * Highway Request
+ */
+struct hiw_request
 {
-	// public implementation
-	hiw_request pub;
+	// The request method
+	hiw_string method;
+
+	// The request uri
+	hiw_string uri;
+
+	// Headers sent from the client
+	hiw_headers headers;
+
+	// content_length received from the client
+	int content_length;
 
 	// Fixed memory
 	char memory_fixed[HIW_MAX_HEADER_SIZE];
@@ -79,14 +91,9 @@ struct hiw_internal_request
 	// should the connection be opened for this request
 	bool connection_close;
 
-	// keep track of the expected number of bytes left to be read from the request socket
-	int content_length;
-
 	// How much of the content length is left to be read
 	int content_length_remaining;
 };
-
-typedef struct hiw_internal_request hiw_internal_request;
 
 // An error has occurred during the writing
 #define hiw_internal_response_flag_error (1 << 0)
@@ -159,7 +166,7 @@ bool hiw_internal_response_out_of_memory(hiw_response* r)
  * @param req
  * @param thread
  */
-void hiw_internal_request_init(hiw_internal_request* const req, hiw_servlet_thread* const thread)
+void hiw_internal_request_init(hiw_request* const req, hiw_servlet_thread* const thread)
 {
 	hiw_memory_fixed_init(&req->memory, req->memory_fixed, sizeof(req->memory_fixed));
 	req->thread = thread;
@@ -187,17 +194,16 @@ void hiw_internal_response_init(hiw_response* const resp, hiw_servlet_thread* co
  * @param req
  * @param client
  */
-void hiw_internal_request_reset(hiw_internal_request* req, hiw_client* client)
+void hiw_internal_request_reset(hiw_request* req, hiw_client* client)
 {
 	req->client = client;
-	req->pub.headers.count = 0;
-	req->pub.uri.length = 0;
-	req->pub.method.length = 0;
-	req->pub.content_length = -1;
+	req->headers.count = 0;
+	req->uri.length = 0;
+	req->method.length = 0;
 	req->read_ahead = req->memory.ptr;
 	req->read_ahead_length = 0;
 	req->connection_close = true;
-	req->content_length = 0;
+	req->content_length = -1;
 	req->content_length_remaining = 0;
 	hiw_memory_reset(&req->memory);
 }
@@ -226,6 +232,7 @@ hiw_servlet* hiw_servlet_new(hiw_server* const server)
 	s->config = hiw_servlet_config_default;
 	s->filter_chain.filters = NULL;
 	s->start_func = hiw_servlet_start_func_default;
+	s->threads = NULL;
 	s->server = server;
 	s->flags = hiw_servlet_flags_server_owner;
 	return s;
@@ -410,7 +417,7 @@ void* hiw_filter_get_data(const hiw_filter_chain* filter) { return filter->filte
 
 void hiw_filter_chain_next(hiw_request* req, hiw_response* resp, const hiw_filter_chain* filter)
 {
-	hiw_internal_request* const impl = (hiw_internal_request*)req;
+	hiw_request* const impl = (hiw_request*)req;
 	log_debugf("[t:%p][c:%p] next filter", impl->thread, impl->client);
 
 	const hiw_filter* next = filter->filters + 1;
@@ -425,7 +432,7 @@ void hiw_filter_chain_next(hiw_request* req, hiw_response* resp, const hiw_filte
 	}
 }
 
-bool hiw_internal_request_parse_status_line(hiw_internal_request* req, hiw_string line)
+bool hiw_internal_request_parse_status_line(hiw_request* req, hiw_string line)
 {
 	// Check to see if the status line is valid
 	if (line.length == 0)
@@ -449,16 +456,16 @@ bool hiw_internal_request_parse_status_line(hiw_internal_request* req, hiw_strin
 		return false;
 	}
 
-	req->pub.method = hiw_string_rtrim(method_path_version[0]);
-	req->pub.uri = hiw_string_rtrim(method_path_version[1]);
+	req->method = hiw_string_rtrim(method_path_version[0]);
+	req->uri = hiw_string_rtrim(method_path_version[1]);
 	return true;
 }
 
-bool hiw_internal_request_read_headers(hiw_internal_request* req)
+bool hiw_internal_request_read_headers(hiw_request* req)
 {
 	log_infof("[t:%p][c:%p] reading headers", req->thread, req->client);
 
-	req->pub.headers.count = 0;
+	req->headers.count = 0;
 
 	// headers are read in the following way:
 	//
@@ -525,7 +532,7 @@ bool hiw_internal_request_read_headers(hiw_internal_request* req)
 		while (hiw_string_readline(&(hiw_string){.begin = pos, .length = bytes_left}, &line))
 		{
 			// verify if we've received too many headers
-			if (req->pub.headers.count > HIW_MAX_HEADERS_COUNT)
+			if (req->headers.count > HIW_MAX_HEADERS_COUNT)
 			{
 				log_warnf("[t:%p][c:%p] received more headers than %d", req->thread, req->client,
 						  HIW_MAX_HEADERS_COUNT);
@@ -534,7 +541,7 @@ bool hiw_internal_request_read_headers(hiw_internal_request* req)
 
 			// parse and read the header
 			hiw_string name_value[2];
-			hiw_header* const header = &req->pub.headers.headers[req->pub.headers.count];
+			hiw_header* const header = &req->headers.headers[req->headers.count];
 			const int num_parts = hiw_string_split(&line, ':', name_value, 2);
 			if (num_parts != 2)
 			{
@@ -565,7 +572,7 @@ bool hiw_internal_request_read_headers(hiw_internal_request* req)
 				return false;
 			}
 
-			req->pub.headers.count++;
+			req->headers.count++;
 			header->name = hiw_string_trim(name_value[0]);
 			header->value = hiw_string_trim(name_value[1]);
 
@@ -586,8 +593,8 @@ bool hiw_internal_request_read_headers(hiw_internal_request* req)
 			// should we receive content from the client?
 			if (hiw_str_cmpc(header->name, "Content-Length"))
 			{
-				hiw_string_toi(header->value, &req->pub.content_length);
-				header_content_length = req->pub.content_length;
+				hiw_string_toi(header->value, &req->content_length);
+				header_content_length = req->content_length;
 				continue;
 			}
 		}
@@ -706,7 +713,7 @@ void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 {
 	log_debugf("hiw_thread(%p) start listening to incoming requests in thread", st->thread);
 
-	hiw_internal_request request;
+	hiw_request request;
 	hiw_internal_request_init(&request, st);
 	hiw_response response;
 	hiw_internal_response_init(&response, st);
@@ -738,16 +745,16 @@ void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 			response.connection_close = true;
 			goto read_abort;
 		}
-		log_infof("[t:%p][c:%p] %.*s %.*s", request.thread, request.client, request.pub.method.length,
-				  request.pub.method.begin, request.pub.uri.length, request.pub.uri.begin);
+		log_infof("[t:%p][c:%p] %.*s %.*s", request.thread, request.client, request.method.length, request.method.begin,
+				  request.uri.length, request.uri.begin);
 
 		response.connection_close = request.connection_close;
 
 		// Iterate over all filters and then, eventually, get to the actual servlet function!
 		if (st->filter_chain.filters != NULL)
-			st->filter_chain.filters->func(&request.pub, &response, &st->filter_chain);
+			st->filter_chain.filters->func(&request, &response, &st->filter_chain);
 		else if (st->servlet->servlet_func != NULL)
-			st->servlet->servlet_func(&request.pub, &response);
+			st->servlet->servlet_func(&request, &response);
 
 		// Verify that we've read all content from the client. If not, then the client sent a Content-Length header
 		// that's larger than what the servlet read
@@ -788,13 +795,19 @@ void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 
 hiw_thread* hiw_request_get_thread(hiw_request* req)
 {
-	hiw_internal_request* const request = (hiw_internal_request*)req;
+	hiw_request* const request = (hiw_request*)req;
 	return request->thread->thread;
 }
 
+hiw_string hiw_request_get_uri(const hiw_request* const req) { return req->uri; }
+
+hiw_string hiw_request_get_method(const hiw_request* req) { return req->method; }
+
+int hiw_request_get_content_length(const hiw_request* req) { return req->content_length; }
+
 int hiw_request_recv(hiw_request* req, char* dest, int n)
 {
-	hiw_internal_request* const impl = (hiw_internal_request*)req;
+	hiw_request* const impl = (hiw_request*)req;
 
 	// caller did not want to read any bytes
 	if (n == 0)
