@@ -58,6 +58,9 @@ struct hiw_internal_request
 	// public implementation
 	hiw_request pub;
 
+	// Fixed memory
+	char memory_fixed[HIW_MAX_HEADER_SIZE];
+
 	// memory associated with the request's internal resources
 	hiw_memory memory;
 
@@ -104,6 +107,9 @@ struct hiw_internal_response
 {
 	// public implementation
 	hiw_response pub;
+
+	// Fixed memory
+	char memory_fixed[HIW_MAX_HEADER_SIZE];
 
 	// memory associated with the request's internal resources
 	hiw_memory memory;
@@ -157,10 +163,9 @@ bool hiw_internal_response_out_of_memory(hiw_internal_response* r)
  * @param buf
  * @param len
  */
-void hiw_internal_request_init(hiw_internal_request* const req, hiw_servlet_thread* const thread, char* const buf,
-							   const int len)
+void hiw_internal_request_init(hiw_internal_request* const req, hiw_servlet_thread* const thread)
 {
-	hiw_memory_fixed_init(&req->memory, buf, len);
+	hiw_memory_fixed_init(&req->memory, req->memory_fixed, sizeof(req->memory_fixed));
 	req->thread = thread;
 	req->client = NULL;
 	req->connection_close = true;
@@ -174,10 +179,9 @@ void hiw_internal_request_init(hiw_internal_request* const req, hiw_servlet_thre
  * @param buf
  * @param len
  */
-void hiw_internal_response_init(hiw_internal_response* const resp, hiw_servlet_thread* const thread, char* const buf,
-								const int len)
+void hiw_internal_response_init(hiw_internal_response* const resp, hiw_servlet_thread* const thread)
 {
-	hiw_memory_fixed_init(&resp->memory, buf, len);
+	hiw_memory_fixed_init(&resp->memory, resp->memory_fixed, sizeof(resp->memory_fixed));
 	resp->thread = thread;
 	resp->client = NULL;
 	resp->connection_close = true;
@@ -709,13 +713,12 @@ void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 	log_debugf("hiw_thread(%p) start listening to incoming requests in thread", st->thread);
 
 	// Memory used for parsing header data, both for the request and the response
-	char request_stack_memory[HIW_MAX_HEADER_SIZE];
 	char response_stack_memory[HIW_MAX_HEADER_SIZE];
 
 	hiw_internal_request request;
-	hiw_internal_request_init(&request, st, request_stack_memory, sizeof(request_stack_memory));
+	hiw_internal_request_init(&request, st);
 	hiw_internal_response response;
-	hiw_internal_response_init(&response, st, response_stack_memory, sizeof(response_stack_memory));
+	hiw_internal_response_init(&response, st);
 
 	// allow the thread to be running for as long as the server is running
 	while (hiw_server_is_running(st->servlet->server))

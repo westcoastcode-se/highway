@@ -41,10 +41,7 @@ bool critical_section_wait(const PCONDITION_VARIABLE cond, const PCRITICAL_SECTI
 
 typedef unsigned long long hiw_tick_t;
 
-hiw_tick_t hiw_get_tick_count()
-{
-	return GetTickCount64();
-}
+hiw_tick_t hiw_get_tick_count() { return GetTickCount64(); }
 
 #define critical_section_notify(cond) WakeConditionVariable(cond)
 #define critical_section_broadcast(cond) WakeAllConditionVariable(cond)
@@ -71,7 +68,8 @@ typedef unsigned long long hiw_tick_t;
 hiw_tick_t hiw_get_tick_count()
 {
 	struct timespec ts;
-	return (uint64_t)(ts.tv_nsec / 1000000) + ((uint64_t)ts.tv_sec * 1000ull);
+	clock_gettime(CLOCK_REALTIME, &ts);
+	return (hiw_tick_t)(ts.tv_nsec / 1000000) + ((hiw_tick_t)ts.tv_sec * 1000ull);
 }
 
 #define critical_section_notify(cond) pthread_cond_signal(cond)
