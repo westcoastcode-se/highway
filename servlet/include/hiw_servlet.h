@@ -79,16 +79,6 @@ struct HIW_PUBLIC hiw_request
 };
 
 typedef struct hiw_request hiw_request;
-
-/**
- * A highway http response
- */
-struct HIW_PUBLIC hiw_response
-{
-	// Headers to be sent to the server
-	hiw_headers headers;
-};
-
 typedef struct hiw_response hiw_response;
 typedef struct hiw_filter_chain hiw_filter_chain;
 
