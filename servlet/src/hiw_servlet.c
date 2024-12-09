@@ -54,6 +54,20 @@ struct hiw_servlet_thread
 };
 
 /**
+ * A highway http header
+ */
+struct HIW_PUBLIC hiw_headers
+{
+	// memory for all headers
+	hiw_header headers[HIW_MAX_HEADERS_COUNT];
+
+	// number of headers
+	int count;
+};
+
+typedef struct hiw_headers hiw_headers;
+
+/**
  * Highway Request
  */
 struct hiw_request
@@ -648,9 +662,7 @@ bool hiw_response_flush_headers(hiw_response* const resp)
 {
 	// Headers are already sent?
 	if (hiw_bit_test(resp->flags, hiw_internal_response_flag_headers_sent))
-	{
 		return true;
-	}
 
 	if (resp->status_code == 0)
 	{
@@ -975,48 +987,46 @@ bool hiw_response_write_header(hiw_response* const resp, const hiw_header header
 	return true;
 }
 
-bool hiw_response_write_body_raw(hiw_response* resp, const char* src, int n)
+bool hiw_response_write_body_raw(hiw_response* const resp, const char* src, int n)
 {
 	assert(resp != NULL);
 	if (resp == NULL)
 		return false;
-	hiw_response* const impl = (hiw_response*)resp;
 
 	// Flush all headers before sending the first data to the client
-	if (!hiw_bit_test(impl->flags, hiw_internal_response_flag_headers_sent))
+	if (!hiw_bit_test(resp->flags, hiw_internal_response_flag_headers_sent))
 	{
-		// Not setting the content-length is actually allowed, but handle it in a special way
-		if (!hiw_bit_test(impl->flags, hiw_internal_response_flag_content_length_set))
+		if (resp->content_length <= 0)
 		{
-			// force the connection to close when the servlet is done writing data to the client
-			if (!hiw_response_set_connection_close(impl, true))
-				return hiw_internal_response_error(impl);
+			log_errorf("[t:%p][c:%p] content-length header is required when returning body content", resp->thread,
+					   resp->client);
+			return hiw_internal_response_error(resp);
 		}
 
 		// flush all headers, if not already done so
-		if (!hiw_response_flush_headers(impl))
-			return hiw_internal_response_error(impl);
+		if (!hiw_response_flush_headers(resp))
+			return hiw_internal_response_error(resp);
 	}
 
 	// Send the raw data to the client
-	const int sent = hiw_client_sendall(impl->client, src, n);
+	const int sent = hiw_client_sendall(resp->client, src, n);
 	if (sent != n)
 	{
-		log_errorf("[t:%p][c:%p] expected to send %d bytes to the client but sent %d", impl->thread, impl->client, n,
+		log_errorf("[t:%p][c:%p] expected to send %d bytes to the client but sent %d", resp->thread, resp->client, n,
 				   sent);
-		return hiw_internal_response_error(impl);
+		return hiw_internal_response_error(resp);
 	}
 
-	if (impl->content_length > 0)
+	if (resp->content_length > 0)
 	{
-		if (impl->content_bytes_left > 0)
-			impl->content_bytes_left -= n;
+		if (resp->content_bytes_left > 0)
+			resp->content_bytes_left -= n;
 
-		if (impl->content_bytes_left < 0)
+		if (resp->content_bytes_left < 0)
 		{
 			log_errorf("[t:%p][c:%p] you're trying to send more data to the client than content-length %d allows",
-					   impl->thread, impl->client, impl->content_length);
-			return hiw_internal_response_error(impl);
+					   resp->thread, resp->client, resp->content_length);
+			return hiw_internal_response_error(resp);
 		}
 	}
 
@@ -1029,11 +1039,10 @@ bool hiw_response_set_content_type(hiw_response* const resp, const hiw_string mi
 	return hiw_response_write_header(resp, (hiw_header){.name = content_type_name, .value = mime_type});
 }
 
-bool hiw_response_set_content_length(hiw_response* resp, int len)
+bool hiw_response_set_content_length(hiw_response* const resp, const int len)
 {
 	// Only set this once
-	hiw_response* const impl = (hiw_response*)resp;
-	if (hiw_bit_test(impl->flags, hiw_internal_response_flag_content_length_set))
+	if (hiw_bit_test(resp->flags, hiw_internal_response_flag_content_length_set))
 		return true;
 
 	const hiw_string content_length_name = hiw_string_const("Content-Length");
@@ -1042,11 +1051,11 @@ bool hiw_response_set_content_length(hiw_response* resp, int len)
 	const int written_bytes = (int)(hiw_std_uitoc(temp, sizeof(temp), len) - temp);
 	if (!hiw_response_write_header(
 			resp, (hiw_header){.name = content_length_name, .value.begin = temp, .value.length = written_bytes}))
-		return hiw_internal_response_error(impl);
+		return hiw_internal_response_error(resp);
 
-	impl->content_length = len;
-	impl->content_bytes_left = len;
-	impl->flags |= hiw_internal_response_flag_content_length_set;
+	resp->content_length = len;
+	resp->content_bytes_left = len;
+	resp->flags |= hiw_internal_response_flag_content_length_set;
 	return true;
 }
 

@@ -46,19 +46,6 @@ struct HIW_PUBLIC hiw_header
 };
 typedef struct hiw_header hiw_header;
 
-/**
- * A highway http header
- */
-struct HIW_PUBLIC hiw_headers
-{
-	// memory for all headers
-	hiw_header headers[HIW_MAX_HEADERS_COUNT];
-
-	// number of headers
-	int count;
-};
-
-typedef struct hiw_headers hiw_headers;
 typedef struct hiw_request hiw_request;
 typedef struct hiw_response hiw_response;
 typedef struct hiw_filter_chain hiw_filter_chain;
