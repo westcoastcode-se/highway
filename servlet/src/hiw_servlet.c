@@ -56,7 +56,7 @@ struct hiw_servlet_thread
 /**
  * A highway http header
  */
-struct HIW_PUBLIC hiw_headers
+struct hiw_headers
 {
 	// memory for all headers
 	hiw_header headers[HIW_MAX_HEADERS_COUNT];
@@ -805,10 +805,9 @@ void hiw_servlet_start_filter_chain(hiw_servlet_thread* st)
 	log_infof("[t:%p] shutting down servlet thread", request.thread->thread);
 }
 
-hiw_thread* hiw_request_get_thread(hiw_request* req)
+hiw_thread* hiw_request_get_thread(const hiw_request* const req)
 {
-	hiw_request* const request = (hiw_request*)req;
-	return request->thread->thread;
+	return req->thread->thread;
 }
 
 hiw_string hiw_request_get_uri(const hiw_request* const req) { return req->uri; }
@@ -817,37 +816,35 @@ hiw_string hiw_request_get_method(const hiw_request* req) { return req->method; 
 
 int hiw_request_get_content_length(const hiw_request* req) { return req->content_length; }
 
-int hiw_request_recv(hiw_request* req, char* dest, int n)
+int hiw_request_recv(hiw_request* const req, char* dest, int n)
 {
-	hiw_request* const impl = (hiw_request*)req;
-
 	// caller did not want to read any bytes
 	if (n == 0)
 		return 0;
 
 	// content length is mandatory if the library should allow reading data from a request
-	if (impl->content_length == 0)
+	if (req->content_length == 0)
 		return -1;
 
 	// no more content to be read
-	if (impl->content_length_remaining <= 0)
+	if (req->content_length_remaining <= 0)
 		return -1;
 
 	// clamp the requested bytes to the content-length
-	n = n > impl->content_length_remaining ? impl->content_length_remaining : n;
+	n = n > req->content_length_remaining ? req->content_length_remaining : n;
 	if (n <= 0)
 		return -1;
 
 	int result = 0;
 
 	// Copy read-ahead data first
-	if (impl->read_ahead_length > 0)
+	if (req->read_ahead_length > 0)
 	{
 		// copy memory from the read ahead buffer
-		const int read_bytes = impl->read_ahead_length > n ? n : impl->read_ahead_length;
-		hiw_std_mempy(impl->read_ahead, read_bytes, dest, n);
-		impl->read_ahead_length -= read_bytes;
-		impl->read_ahead += read_bytes;
+		const int read_bytes = req->read_ahead_length > n ? n : req->read_ahead_length;
+		hiw_std_mempy(req->read_ahead, read_bytes, dest, n);
+		req->read_ahead_length -= read_bytes;
+		req->read_ahead += read_bytes;
 		result = read_bytes;
 		n -= read_bytes;
 	}
@@ -855,13 +852,13 @@ int hiw_request_recv(hiw_request* req, char* dest, int n)
 	// is there more data that's requested to be read from the client
 	if (n > 0)
 	{
-		const int ret = hiw_client_recv(impl->client, dest, n);
+		const int ret = hiw_client_recv(req->client, dest, n);
 		if (ret == -1)
 			return -1;
 		result += ret;
 	}
 
-	impl->content_length_remaining -= result;
+	req->content_length_remaining -= result;
 	return result;
 }
 

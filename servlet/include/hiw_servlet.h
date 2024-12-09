@@ -203,7 +203,7 @@ HIW_PUBLIC extern void hiw_servlet_start_filter_chain(hiw_servlet_thread* st);
  * @param req the request
  * @return the thread associated with the supplier request
  */
-HIW_PUBLIC extern hiw_thread* hiw_request_get_thread(hiw_request* req);
+HIW_PUBLIC extern hiw_thread* hiw_request_get_thread(const hiw_request* req);
 
 /**
  * Get the uri for the incoming request
