@@ -22,6 +22,7 @@ that can be used to build REST applications.
 
 - [ ] Security: HTTPS
 - [ ] Security: Blocking IP-addresses and ranges
+- [ ] Library: Chunked Encoding
 - [ ] Cache Control
 - [ ] HttpStatus: 304 Not Modified in case of `If-Modified-Since` header
 - [ ] Security: CORS (Cross-Origin Resource Sharing) support for increased protection
